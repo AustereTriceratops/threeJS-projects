@@ -36,17 +36,6 @@ var kStep = 0.001
 var gui;
 
 
-function graph(){
-	var j = 0;
-	fill(250,100);
-  stroke(230,70);
-  strokeWeight(0.8);
-	while (j < maxpoints-1) {
-      ellipse(200+ w2 + xscl*x[j],h2 -yscl*y[j],1.0,1.0);
-      j+=1;
-	}
-}
-
 function update_params(){
 	a+= 0.012;
   b+= 0.01;
@@ -65,34 +54,6 @@ function attractor(){
 	}
 }
 
-/*
-function guicontainer(){
-
-	fill(250,100);
-	noStroke();
-	rect(-w2,-h2 + 20,300,h-40);
-}
-
-function sliderbars(n){
-	dist = (h-40)/n;
-	fill(70,140);
-	noStroke(); // create background bars for the slider
-	for (i=0; i<n; i++ ){
-		rect(-w2 + 20, -h2 + 20 + dist/2 + i*dist,260,20)
-	}
-
-	//initialize the nodes in the slider with the parameters
-	// min range is ()-w2+20)
-
-
-
-	fill(250,140);
-	noStroke();
-	for (i=0; i<n; i++ ){
-		rect(-w2 + 20, -h2 + 20 + dist/2 + i*dist,20,20)
-	}
-}
-*/
 
 
 function setup() {
@@ -114,7 +75,4 @@ function draw() {
 
 	attractor();
 	graph();
-
-
-
 }
