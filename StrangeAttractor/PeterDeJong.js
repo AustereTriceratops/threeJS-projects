@@ -50,24 +50,23 @@ function attractor(){
 function graph(){
 	var j = 0;
 	fill(250,100);
-  stroke(230,70);
-  strokeWeight(0.8);
+  	stroke(230,70);
+  	strokeWeight(0.8);
 	while (j < maxpoints-1) {
-      ellipse(200+ w2 + xscl*x[j],h2 -yscl*y[j],1.0,1.0);
-      j+=1;
+      		ellipse(200+ w2 + xscl*x[j],h2 -yscl*y[j],1.0,1.0);
+      		j+=1;
 	}
 }
 
 
 function setup() {
-  createCanvas(w, h);
+  	createCanvas(w, h);
 
 	gui = createGui('parameters');
 	gui.addGlobals('a','b', 'c','d', 'k');
 
 	noLoop();
 }
-
 
 gui.show();
 
