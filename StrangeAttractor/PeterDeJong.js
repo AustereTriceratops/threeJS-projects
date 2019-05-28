@@ -36,13 +36,6 @@ var kStep = 0.001
 var gui;
 
 
-function update_params(){
-	a+= 0.012;
-  b+= 0.01;
-  c+= 0.014;
-  d-= 0.011;
-}
-
 function attractor(){
 	var f=1;
 	var t = 0;
@@ -54,6 +47,16 @@ function attractor(){
 	}
 }
 
+function graph(){
+	var j = 0;
+	fill(250,100);
+  stroke(230,70);
+  strokeWeight(0.8);
+	while (j < maxpoints-1) {
+      ellipse(200+ w2 + xscl*x[j],h2 -yscl*y[j],1.0,1.0);
+      j+=1;
+	}
+}
 
 
 function setup() {
@@ -71,7 +74,6 @@ gui.show();
 function draw() {
 
 	background(70);
-
 
 	attractor();
 	graph();
