@@ -2,7 +2,7 @@
 
 A collection of various Javascript-based projects. 
 
-##Strange Attractors
+## Strange Attractors
 
 Displaying a Peter de Jong attractor with p5.js and p5.gui.js.
 
