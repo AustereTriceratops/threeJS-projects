@@ -3,7 +3,7 @@ h = window.innerHeight;
 w2 = w/2;
 h2 = h/2;
 
-var maxpoints = 15000;
+var maxpoints = 5000;
 var x = new Array(maxpoints).fill(0);
 var y = new Array(maxpoints).fill(0);
 
