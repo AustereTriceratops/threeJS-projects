@@ -1,5 +1,6 @@
 var camera, scene, renderer;
 var geometry, material, mesh;
+var aspect = window.innerWidth / window.innerHeight;
 
 init();
 
@@ -7,7 +8,8 @@ function init() {
   setup();
 
   let uniforms = {
-    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)}
+    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
+    aspect: {type: 'float', value: aspect}
   };
 
   geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -17,12 +19,10 @@ function init() {
   });
 
   mesh = new THREE.Mesh(geometry, material);
-  mesh.position.x = 0;
 
   scene.add(mesh);
 
-  //animate();
-  renderer.render(scene, camera);
+  animate();
 }
 
 function animate(){
@@ -36,15 +36,32 @@ function animate(){
 
 function fragmentShader(){
   return `
-    //varying vec3 vUv;
-    uniform vec2 res;
+uniform vec2 res;
+uniform float aspect;
 
-    void main(){
+float mandelbrot(vec2 c){
+  float alpha = 1.0;
+  vec2 z = vec2(0.0 , 0.0);
 
-      vec2 b = gl_FragCoord.xy / res;
+  for(int j=0; j < 80; j++){
+    z = vec2(z.x*z.x - z.y*z.y + c.x, 2.0*z.x*z.y + c.y);
 
-      vec3 coord = vec3(b.x, b.y, b.x);
-      gl_FragColor = vec4(coord, 1.0);
+    if(z.x*z.x + z.y*z.y > 4.0){
+      alpha = float(j)/50.0;
+      break;
+    }
+  }
+
+  return alpha;
+}
+
+void main(){
+
+  vec2 uv = vec2(4.0*aspect, 4.0) * gl_FragCoord.xy / res - vec2(2.0*aspect, 2.0);
+  float s = mandelbrot(uv);
+
+  vec3 coord = vec3(s, s, s);
+  gl_FragColor = vec4(pow(coord, vec3(0.5, 0.5, 0.5)), 1.0);
     }
   `
 }
@@ -63,7 +80,8 @@ function setup(){
 
 
 function window_resize() {
-  camera.aspect =  window.innerWidth / window.innerHeight;
+  aspect = window.innerWidth / window.innerHeight;
+  camera.aspect =  aspect;
   camera.updateProjectionMatrix();
   renderer.setSize( window.innerWidth, window.innerHeight );
 }
