@@ -11,7 +11,7 @@ function init() {
     colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)}
   };
 
-  geometry = new THREE.PlaneGeometry(8,4, 10, 10);
+  geometry = new THREE.PlaneBufferGeometry(2, 2);
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
     fragmentShader: fragmentShader(),
@@ -66,8 +66,7 @@ function fragmentShader(){
 // Setup ================================================
 
 function setup(){
-  camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.01, 100 );
-  camera.position.z = 5;
+  camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 
   scene = new THREE.Scene();
 
