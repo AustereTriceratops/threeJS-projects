@@ -14,7 +14,6 @@ function init() {
   material = new THREE.ShaderMaterial({
     uniforms: uniforms,
     fragmentShader: fragmentShader(),
-    vertexShader: vertexShader(),
   });
 
   mesh = new THREE.Mesh(geometry, material);
@@ -33,21 +32,7 @@ function animate(){
 }
 
 // shaders ===========================================
-function vertexShader(){
-  return `
-    varying vec3 vUv;
-    varying vec4 modelViewPosition;
-    varying vec3 vecNormal;
-
-    void main(){
-      vUv = position;
-      vec4 modelViewPosition = modelViewMatrix * vec4(position, 1.0);
-      vecNormal = (modelViewMatrix*vec4(normal, 0.0)).xyz;
-      gl_Position = projectionMatrix * modelViewPosition;
-    }
-
-  `
-}
+// don't need vertex shader
 
 function fragmentShader(){
   return `
