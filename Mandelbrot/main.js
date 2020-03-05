@@ -7,8 +7,7 @@ function init() {
   setup();
 
   let uniforms = {
-    colorA: {type: 'vec3', value: new THREE.Color(0x743bd5)},
-    colorB: {type: 'vec3', value: new THREE.Color(0xACB6E5)}
+    res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)}
   };
 
   geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -52,12 +51,14 @@ function vertexShader(){
 
 function fragmentShader(){
   return `
-    varying vec3 vUv;
+    //varying vec3 vUv;
+    uniform vec2 res;
 
     void main(){
 
-      vec2 b = gl_FragCoord.xy;
-      vec3 coord = vec3(vUv.z, vUv.y, vUv.y);
+      vec2 b = gl_FragCoord.xy / res;
+
+      vec3 coord = vec3(b.x, b.y, b.x);
       gl_FragColor = vec4(coord, 1.0);
     }
   `
