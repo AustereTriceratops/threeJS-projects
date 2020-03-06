@@ -3,6 +3,7 @@ var geometry, material, mesh;
 var uniforms;
 var aspect = window.innerWidth / window.innerHeight;
 var zoom = 1.0;
+var mouseX, mouseY;
 
 init();
 
@@ -61,8 +62,9 @@ float mandelbrot(vec2 c){
 }
 
 void main(){
+  // gl_FragCoord in [0,1]
 
-  vec2 uv = zoom * vec2(4.0*aspect, 4.0) * gl_FragCoord.xy / res - vec2(2.0*aspect, 2.0);
+  vec2 uv = zoom * vec2(4.0*aspect, 4.0) * gl_FragCoord.xy / res - zoom*vec2(2.0*aspect, 2.0);
   float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
@@ -93,8 +95,14 @@ function window_resize() {
 
 function scroll(event){
   zoom -= event.wheelDeltaY*0.0003;
+
+  mouseX = event.clientX / window.innerWidth;
+  mouseY = event.clientY / window.innerHeight;
+
   uniforms['zoom']['value'] = zoom;
+
 }
+
 
 window.addEventListener('resize', window_resize, false);
 document.addEventListener( 'mousewheel', scroll, false );
