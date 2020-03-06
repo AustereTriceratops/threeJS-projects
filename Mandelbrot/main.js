@@ -46,22 +46,40 @@ function animate(){
 
 function fragmentShader(){
   return `
+precision highp float;
 uniform vec2 res;
 uniform float aspect;
 uniform float zoom;
 uniform vec2 offset;
 
+vec2 cm (vec2 a, vec2 b){
+  return vec2(a.x*b.x - a.y*b.y, a.x*b.y + b.x*a.y);
+}
+
+vec2 conj (vec2 a){
+  return vec2(a.x, -a.y);
+}
+
 float mandelbrot(vec2 c){
   float alpha = 1.0;
   vec2 z = vec2(0.0 , 0.0);
+  vec2 z_0;
+  vec2 z_1;
+  vec2 z_2;
 
-  for(int j=0; j < 600; j++){  // j < max iterations
-    float x_sq = z.x*z.x;
-    float y_sq = z.y*z.y;
-    z = vec2(x_sq - y_sq + c.x, 2.0*z.x*z.y + c.y);
+  for(int i=0; i < 500; i++){  // i < max iterations
+    z_2 = z_1;
+    z_1 = z_0;
+    z_0 = z;
 
-    if(x_sq + y_sq > 4.0){
-      alpha = float(j)/600.0; // should be same as max iterations
+    float x_sq = z_0.x*z_0.x;
+    float y_sq = z_0.y*z_0.y;
+    vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
+
+    z = z_sq + 1.0*c + 0.8*cm(z_1, z_1);
+
+    if(x_sq + y_sq > 6.0){
+      alpha = float(i)/500.0; // should be same as max iterations
       break;
     }
   }
@@ -69,14 +87,13 @@ float mandelbrot(vec2 c){
   return alpha;
 }
 
-void main(){
-  // gl_FragCoord in [0,1]
+void main(){ // gl_FragCoord in [0,1]
   vec2 uv = zoom * vec2(aspect, 1.0) * gl_FragCoord.xy / res + offset;
   float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
-  gl_FragColor = vec4(pow(coord, vec3(4.0, 2.0, 1.0)), 1.0);
-    }
+  gl_FragColor = vec4(pow(coord, vec3(7.0, 8.0, 5.0)), 1.0);
+}
   `
 }
 
