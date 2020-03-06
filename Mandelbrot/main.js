@@ -55,13 +55,13 @@ float mandelbrot(vec2 c){
   float alpha = 1.0;
   vec2 z = vec2(0.0 , 0.0);
 
-  for(int j=0; j < 800; j++){  // max iterations
+  for(int j=0; j < 600; j++){  // j < max iterations
     float x_sq = z.x*z.x;
     float y_sq = z.y*z.y;
     z = vec2(x_sq - y_sq + c.x, 2.0*z.x*z.y + c.y);
 
     if(x_sq + y_sq > 4.0){
-      alpha = float(j)/50.0;
+      alpha = float(j)/600.0; // should be same as max iterations
       break;
     }
   }
@@ -75,7 +75,7 @@ void main(){
   float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
-  gl_FragColor = vec4(pow(coord, vec3(0.8, 0.7, 0.3)), 1.0);
+  gl_FragColor = vec4(pow(coord, vec3(4.0, 2.0, 1.0)), 1.0);
     }
   `
 }
@@ -87,7 +87,7 @@ function setup(){
 
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer( { antialias: true } );
+  renderer = new THREE.WebGLRenderer( { antialias: true, precision:'highp' } );
   renderer.setSize( window.innerWidth, window.innerHeight - 2 );
   document.body.appendChild( renderer.domElement );
 }
