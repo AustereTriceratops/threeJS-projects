@@ -1,15 +1,18 @@
 var camera, scene, renderer;
 var geometry, material, mesh;
+var uniforms;
 var aspect = window.innerWidth / window.innerHeight;
+var zoom = 1.0;
 
 init();
 
 function init() {
   setup();
 
-  let uniforms = {
+  uniforms = {
     res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
-    aspect: {type: 'float', value: aspect}
+    aspect: {type: 'float', value: aspect},
+    zoom: {type:'float', value: zoom}
   };
 
   geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -26,6 +29,7 @@ function init() {
 }
 
 function animate(){
+
   renderer.render(scene, camera);
 
   requestAnimationFrame(animate);
@@ -38,6 +42,7 @@ function fragmentShader(){
   return `
 uniform vec2 res;
 uniform float aspect;
+uniform float zoom;
 
 float mandelbrot(vec2 c){
   float alpha = 1.0;
@@ -57,8 +62,8 @@ float mandelbrot(vec2 c){
 
 void main(){
 
-  vec2 uv = vec2(4.0*aspect, 4.0) * gl_FragCoord.xy / res - vec2(2.0*aspect, 2.0);
-  float s = mandelbrot(uv);
+  vec2 uv = zoom * vec2(4.0*aspect, 4.0) * gl_FragCoord.xy / res - vec2(2.0*aspect, 2.0);
+  float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
   gl_FragColor = vec4(pow(coord, vec3(0.5, 0.5, 0.5)), 1.0);
@@ -86,4 +91,10 @@ function window_resize() {
   renderer.setSize( window.innerWidth, window.innerHeight );
 }
 
+function scroll(event){
+  zoom -= event.wheelDeltaY*0.0003;
+  uniforms['zoom']['value'] = zoom;
+}
+
 window.addEventListener('resize', window_resize, false);
+document.addEventListener( 'mousewheel', scroll, false );
