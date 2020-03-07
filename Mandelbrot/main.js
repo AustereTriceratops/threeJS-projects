@@ -76,7 +76,9 @@ float mandelbrot(vec2 c){
     float y_sq = z_0.y*z_0.y;
     vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
 
-    z = z_sq + 1.0*c + 0.8*cm(z_1, z_1);
+    z = z_sq + 1.0*c + 1.0*cm(z_sq, z_0)
+    + 0.8*cm(z_1, z_1) + 0.0*cm(cm(z_1, z_1), z_1)
+    + 0.6*cm(z_2, z_2) + 1.0*cm(cm(z_2, z_2), z_2);
 
     if(x_sq + y_sq > 6.0){
       alpha = float(i)/500.0; // should be same as max iterations
