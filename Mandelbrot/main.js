@@ -1,15 +1,33 @@
 var camera, scene, renderer;
 var geometry, material, mesh;
 var uniforms;
+var mouseX, mouseY;
+
 var aspect = window.innerWidth / window.innerHeight;
 var zoom = 4.0;
-
-var mouseX = 0.5;
-var mouseY = 0.5;
-
 var offset = new THREE.Vector2(-2.0*aspect, -2.0);
 
+var gui = new dat.GUI({width: 300});
+var parameters = {
+  a: 1.01,
+  b: 0.01,
+  c: 0.01,
+  d: 0.01,
+  e: 0.01,
+  f: 0.01
+}
+gui.add(parameters, 'a', -5.0, 5.0).onChange(updateUniforms);
+gui.add(parameters, 'b', -5.0, 5.0).onChange(updateUniforms);
+gui.add(parameters, 'c', -5.0, 5.0).onChange(updateUniforms);
+gui.add(parameters, 'd', -5.0, 5.0).onChange(updateUniforms);
+gui.add(parameters, 'e', -5.0, 5.0).onChange(updateUniforms);
+gui.add(parameters, 'f', -5.0, 5.0).onChange(updateUniforms);
+
+
 init();
+
+
+// ===============================================
 
 function init() {
   setup();
@@ -18,7 +36,9 @@ function init() {
     res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
     aspect: {type: 'float', value: aspect},
     zoom: {type:'float', value: zoom},
-    offset: {type:'vec2', value: offset}
+    offset: {type:'vec2', value: offset},
+    pset1: {type:'vec3', value: new THREE.Vector3(parameters['a'], parameters['b'], parameters['c'])},
+    pset2: {type:'vec3', value: new THREE.Vector3(parameters['d'], parameters['e'], parameters['f'])}
   };
 
   geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -26,9 +46,7 @@ function init() {
     uniforms: uniforms,
     fragmentShader: fragmentShader(),
   });
-
   mesh = new THREE.Mesh(geometry, material);
-
   scene.add(mesh);
 
   animate();
@@ -52,6 +70,10 @@ uniform float aspect;
 uniform float zoom;
 uniform vec2 offset;
 
+// gui parameters
+uniform vec3 pset1;
+uniform vec3 pset2;
+
 vec2 cm (vec2 a, vec2 b){
   return vec2(a.x*b.x - a.y*b.y, a.x*b.y + b.x*a.y);
 }
@@ -67,7 +89,7 @@ float mandelbrot(vec2 c){
   vec2 z_1;
   vec2 z_2;
 
-  for(int i=0; i < 500; i++){  // i < max iterations
+  for(int i=0; i < 400; i++){  // i < max iterations
     z_2 = z_1;
     z_1 = z_0;
     z_0 = z;
@@ -76,12 +98,12 @@ float mandelbrot(vec2 c){
     float y_sq = z_0.y*z_0.y;
     vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
 
-    z = z_sq + 1.0*c + 1.0*cm(z_sq, z_0)
-    + 0.8*cm(z_1, z_1) + 0.0*cm(cm(z_1, z_1), z_1)
-    + 0.6*cm(z_2, z_2) + 1.0*cm(cm(z_2, z_2), z_2);
+    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)            //p1, p2
+    + pset1.z*cm(z_1, z_1) + pset2.x*cm(cm(z_1, z_1), z_1)  //p3, p4
+    + pset2.y*cm(z_2, z_2) + pset2.z*cm(cm(z_2, z_2), z_2);  //p5, p6
 
     if(x_sq + y_sq > 6.0){
-      alpha = float(i)/500.0; // should be same as max iterations
+      alpha = float(i)/400.0; // should be same as max iterations
       break;
     }
   }
@@ -107,16 +129,17 @@ function setup(){
   scene = new THREE.Scene();
 
   renderer = new THREE.WebGLRenderer( { antialias: true, precision:'highp' } );
-  renderer.setSize( window.innerWidth, window.innerHeight - 2 );
+  renderer.setSize( window.innerWidth, window.innerHeight-2 );
   document.body.appendChild( renderer.domElement );
 }
 
+// events ================================================
 
-function window_resize() {
+function windowResize() {  //aspect intentionaly not updated
   aspect = window.innerWidth / window.innerHeight;
   camera.aspect =  aspect;
   camera.updateProjectionMatrix();
-  renderer.setSize( window.innerWidth, window.innerHeight );
+  renderer.setSize( window.innerWidth, window.innerHeight-2);
 }
 
 function scroll(event){
@@ -130,9 +153,14 @@ function scroll(event){
 
   uniforms['zoom']['value'] = zoom;
   uniforms['offset']['value'] = offset;
+}
 
+function updateUniforms(){
+  console.log(parameters['a']);
+  uniforms['pset1']['value'] = new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']);
+  uniforms['pset2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
 }
 
 
-window.addEventListener('resize', window_resize, false);
+window.addEventListener('resize', windowResize, false);
 document.addEventListener( 'mousewheel', scroll, false );
