@@ -47,9 +47,7 @@ function init() {
 }
 
 function animate(){
-
   renderer.render(scene, camera);
-
   requestAnimationFrame(animate);
 }
 
@@ -94,9 +92,9 @@ float mandelbrot(vec2 c){
     vec2 z_1_sq = cm(z_1, z_1);
     vec2 z_2_sq = cm(z_2, z_2);
 
-    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
+    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_1)
     + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
-    + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_1_sq);
+    + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_2);
 
     if(x_sq + y_sq > 12.0){
       alpha = float(i)/200.0; // should be same as max iterations
@@ -112,7 +110,7 @@ void main(){ // gl_FragCoord in [0,1]
   float s = 1.0 - mandelbrot(uv);
 
   vec3 coord = vec3(s, s, s);
-  gl_FragColor = vec4(pow(coord, vec3(7.0, 8.0, 5.0)), 1.0);
+  gl_FragColor = vec4(pow(coord, vec3(5.38, 6.15, 3.85)), 1.0);
 }
   `
 }
@@ -140,7 +138,7 @@ function windowResize() {  //aspect intentionaly not updated
 
 function scroll(event){
   let zoom_0 = zoom;
-  if ("wheelDeltaY" in event){
+  if ("wheelDeltaY" in event){  // chrome vs. firefox
     zoom *= 1 - event.wheelDeltaY*0.0003;
   } else{
     zoom *= 1 + event.deltaY*0.01;
