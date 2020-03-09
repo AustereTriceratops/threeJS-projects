@@ -97,12 +97,17 @@ float mandelbrot(vec2 c){
     float x_sq = z_0.x*z_0.x;
     float y_sq = z_0.y*z_0.y;
     vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
+    vec2 z_1_sq = cm(z_1, z_1);
 
-    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)            //p1, p2
+    /* z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)            //p1, p2
     + pset1.z*cm(z_1, z_1) + pset2.x*cm(cm(z_1, z_1), z_1)  //p3, p4
-    + pset2.y*cm(z_2, z_2) + pset2.z*cm(cm(z_2, z_2), z_2);  //p5, p6
+    + pset2.y*cm(z_2, z_2) + pset2.z*cm(cm(z_2, z_2), z_2);  //p5, p6 */
 
-    if(x_sq + y_sq > 6.0){
+    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
+    + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
+    + pset2.y*cm(z_1, z_0) + pset2.z*cm(z_sq, z_1);
+
+    if(x_sq + y_sq > 8.0){
       alpha = float(i)/400.0; // should be same as max iterations
       break;
     }
