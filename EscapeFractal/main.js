@@ -143,7 +143,7 @@ function scroll(event){
   if ("wheelDeltaY" in event){
     zoom *= 1 - event.wheelDeltaY*0.0003;
   } else{
-    zoom *= 1 + event.deltaY*0.003;
+    zoom *= 1 + event.deltaY*0.01;
   }
 
   let space = zoom - zoom_0;
