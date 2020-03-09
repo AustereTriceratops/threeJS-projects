@@ -14,4 +14,4 @@ Click [here](https://austeretriceratops.github.io/StrangeAttractor/) to view the
 
 Rendering escape fractals in realtime with Three.js and GLSL. 
 
-Click [here]((https://austeretriceratops.github.io/EscapeFractal/)) to view.
+Click [here](https://austeretriceratops.github.io/EscapeFractal/) to view.
