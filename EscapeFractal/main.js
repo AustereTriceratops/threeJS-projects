@@ -83,7 +83,7 @@ float mandelbrot(vec2 c){
   vec2 z_1;
   vec2 z_2;
 
-  for(int i=0; i < 400; i++){  // i < max iterations
+  for(int i=0; i < 200; i++){  // i < max iterations
     z_2 = z_1;
     z_1 = z_0;
     z_0 = z;
@@ -99,7 +99,7 @@ float mandelbrot(vec2 c){
     + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_1_sq);
 
     if(x_sq + y_sq > 12.0){
-      alpha = float(i)/400.0; // should be same as max iterations
+      alpha = float(i)/200.0; // should be same as max iterations
       break;
     }
   }
@@ -140,7 +140,11 @@ function windowResize() {  //aspect intentionaly not updated
 
 function scroll(event){
   let zoom_0 = zoom;
-  zoom *= 1 + event.deltaY*0.0003;
+  if ("deltaY" in event){
+    zoom *= 1 + event.deltaY*0.0003;
+  } else{
+    zoom *= 1 + event.deltaY*0.003;
+  }
 
   let space = zoom - zoom_0;
   let mouseX = event.clientX / window.innerWidth;
