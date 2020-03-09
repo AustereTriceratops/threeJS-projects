@@ -94,7 +94,7 @@ float mandelbrot(vec2 c){
 
     z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
     + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
-    + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_2);
+    + pset2.y*cm(z_1, z_0) + pset2.z*cm(z_sq, z_1);
 
     if(x_sq + y_sq > 12.0){
       alpha = float(i)/200.0; // should be same as max iterations
