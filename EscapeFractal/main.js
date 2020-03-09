@@ -1,7 +1,6 @@
 var camera, scene, renderer;
 var geometry, material, mesh;
 var uniforms;
-var mouseX, mouseY;
 
 var aspect = window.innerWidth / window.innerHeight;
 var zoom = 4.0;
@@ -16,16 +15,11 @@ var parameters = {
   e: 0.01,
   f: 0.01
 }
-gui.add(parameters, 'a', -5.0, 5.0).onChange(updateUniforms);
-gui.add(parameters, 'b', -5.0, 5.0).onChange(updateUniforms);
-gui.add(parameters, 'c', -5.0, 5.0).onChange(updateUniforms);
-gui.add(parameters, 'd', -5.0, 5.0).onChange(updateUniforms);
-gui.add(parameters, 'e', -5.0, 5.0).onChange(updateUniforms);
-gui.add(parameters, 'f', -5.0, 5.0).onChange(updateUniforms);
-
+for (var key in parameters){
+  gui.add(parameters, key, -5.0, 5.0).onChange(updateUniforms);
+}
 
 init();
-
 
 // ===============================================
 
@@ -98,14 +92,11 @@ float mandelbrot(vec2 c){
     float y_sq = z_0.y*z_0.y;
     vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
     vec2 z_1_sq = cm(z_1, z_1);
-
-    /* z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)            //p1, p2
-    + pset1.z*cm(z_1, z_1) + pset2.x*cm(cm(z_1, z_1), z_1)  //p3, p4
-    + pset2.y*cm(z_2, z_2) + pset2.z*cm(cm(z_2, z_2), z_2);  //p5, p6 */
+    vec2 z_2_sq = cm(z_2, z_2);
 
     z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
     + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
-    + pset2.y*cm(z_1, z_0) + pset2.z*cm(z_sq, z_1);
+    + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_1_sq);
 
     if(x_sq + y_sq > 12.0){
       alpha = float(i)/400.0; // should be same as max iterations
@@ -133,7 +124,7 @@ function setup(){
 
   scene = new THREE.Scene();
 
-  renderer = new THREE.WebGLRenderer( { antialias: true, precision:'highp' } );
+  renderer = new THREE.WebGLRenderer( { antialias: false, precision:'highp' } );
   renderer.setSize( window.innerWidth, window.innerHeight-2 );
   document.body.appendChild( renderer.domElement );
 }
@@ -149,11 +140,11 @@ function windowResize() {  //aspect intentionaly not updated
 
 function scroll(event){
   let zoom_0 = zoom;
-  zoom *= 1 - event.wheelDeltaY*0.0003;
+  zoom *= 1 + event.deltaY*0.0003;
 
   let space = zoom - zoom_0;
-  mouseX = event.clientX / window.innerWidth;
-  mouseY = 1-event.clientY / window.innerHeight;
+  let mouseX = event.clientX / window.innerWidth;
+  let mouseY = 1-event.clientY / window.innerHeight;
   offset = offset.add(new THREE.Vector2(-mouseX*space*aspect, -mouseY*space));
 
   uniforms['zoom']['value'] = zoom;
@@ -161,11 +152,10 @@ function scroll(event){
 }
 
 function updateUniforms(){
-  console.log(parameters['a']);
   uniforms['pset1']['value'] = new THREE.Vector3(parameters['a'], parameters['b'], parameters['c']);
   uniforms['pset2']['value'] = new THREE.Vector3(parameters['d'], parameters['e'], parameters['f']);
 }
 
 
 window.addEventListener('resize', windowResize, false);
-document.addEventListener( 'wheel', scroll, false );
+document.addEventListener('wheel', scroll);
