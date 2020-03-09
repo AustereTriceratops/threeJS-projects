@@ -107,7 +107,7 @@ float mandelbrot(vec2 c){
     + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
     + pset2.y*cm(z_1, z_0) + pset2.z*cm(z_sq, z_1);
 
-    if(x_sq + y_sq > 8.0){
+    if(x_sq + y_sq > 12.0){
       alpha = float(i)/400.0; // should be same as max iterations
       break;
     }
@@ -168,4 +168,4 @@ function updateUniforms(){
 
 
 window.addEventListener('resize', windowResize, false);
-document.addEventListener( 'mousewheel', scroll, false );
+document.addEventListener( 'wheel', scroll, false );
