@@ -92,7 +92,7 @@ float mandelbrot(vec2 c){
     vec2 z_1_sq = cm(z_1, z_1);
     vec2 z_2_sq = cm(z_2, z_2);
 
-    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_1)
+    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
     + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
     + pset2.y*z_2_sq + pset2.z*cm(z_2_sq, z_2);
 
