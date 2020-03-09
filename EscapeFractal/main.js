@@ -140,8 +140,8 @@ function windowResize() {  //aspect intentionaly not updated
 
 function scroll(event){
   let zoom_0 = zoom;
-  if ("deltaY" in event){
-    zoom *= 1 + event.deltaY*0.0003;
+  if ("wheelDeltaY" in event){
+    zoom *= 1 - event.wheelDeltaY*0.0003;
   } else{
     zoom *= 1 + event.deltaY*0.003;
   }
