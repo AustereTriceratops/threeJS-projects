@@ -93,8 +93,8 @@ float mandelbrot(vec2 c){
     vec2 z_2_sq = cm(z_2, z_2);
 
     z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
-    + pset1.z*z_1_sq + pset2.x*cm(z_1_sq, z_1)
-    + pset2.y*cm(z_1, z_0) + pset2.z*cm(z_sq, z_1);
+    + pset1.z*z_1_sq + pset2.x*cm(z_sq, conj(z_1))
+    + pset2.y*conj(cm(z_1, z_0)) + pset2.z*cm(z_sq, z_1);
 
     if(x_sq + y_sq > 12.0){
       alpha = float(i)/200.0; // should be same as max iterations
