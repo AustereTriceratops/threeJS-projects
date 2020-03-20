@@ -86,18 +86,23 @@ float mandelbrot(vec2 c){
     z_1 = z_0;
     z_0 = z;
 
-    float x_sq = z_0.x*z_0.x;
-    float y_sq = z_0.y*z_0.y;
-    vec2 z_sq = vec2(x_sq - y_sq, 2.0*z_0.x*z_0.y);
-    vec2 z_1_sq = cm(z_1, z_1);
-    vec2 z_2_sq = cm(z_2, z_2);
+    float x_0_sq = z_0.x*z_0.x;
+    float y_0_sq = z_0.y*z_0.y;
+    vec2 z_0_sq = vec2(x_0_sq - y_0_sq, 2.0*z_0.x*z_0.y);
+    float x_1_sq = z_1.x*z_1.x;
+    float y_1_sq = z_1.y*z_1.y;
+    vec2 z_1_sq = vec2(x_1_sq - y_1_sq, 2.0*z_1.x*z_1.y);
 
-    z = pset1.x*z_sq + c + pset1.y*cm(z_sq, z_0)
-    + pset1.z*z_1_sq + pset2.x*cm(z_sq, conj(z_1))
-    + pset2.y*conj(cm(z_1, z_0)) + pset2.z*cm(z_sq, z_1);
+    z = pset1.x*z_0_sq + c + pset1.y*cm(z_0_sq, z_0)
+    + pset1.z*z_1_sq + pset2.x*cm(z_0_sq, conj(z_1))
+    + pset2.y*conj(cm(z_1, z_0)) + pset2.z*cm(z_0_sq, z_1);
 
-    if(x_sq + y_sq > 12.0){
-      alpha = float(i)/200.0; // should be same as max iterations
+    float z_0_mag = x_0_sq + y_0_sq;
+    float z_1_mag = x_1_sq + y_1_sq;
+
+    if(z_0_mag > 12.0){
+      float frac = (12.0 - z_1_mag) / (z_0_mag - z_1_mag);
+      alpha = (float(i) - 1.0 + frac)/200.0; // should be same as max iterations
       break;
     }
   }
