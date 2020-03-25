@@ -5,51 +5,21 @@ var p, q;
 function init(){
   setup();
 
-  p = new Particle(0.1,0.1503, 1, 0.1);
+  p = new Particle(0.1,0.13, 1, 0.1);
   q = new Particle(0.6, 0);
 
   animate();
 }
 
-var pause = false
+
+var pause = false;
 function animate(){
   if (!pause){
     p.move();
     q.move();
-  }
 
-  // do ths for all particles p
-  if (p.x - 2*p.r < q.x && q.x < p.x + 2*p.r){
-    if (p.y - 2*p.r < q.y && q.y < p.y + 2*p.r){
-      dx = p.x - q.x;
-      dy = p.y - q.y;
-      r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
-      r_0_sq = 4*Math.pow(p.r, 2);
-
-      // collision check
-      if (r_sq < r_0_sq){
-        dxv = p.x_v - q.x_v;
-        dyv = p.y_v - q.y_v;
-
-        // find fractional dt
-        a = Math.pow(dxv, 2) + Math.pow(dyv, 2);
-        b = 2*(dx*dxv + dy*dyv);
-        c = r_sq - r_0_sq;
-        dt = (b + Math.pow(Math.pow(b, 2) - 4*a*c, 0.5))/(2*a);
-        console.log(dt);
-
-        // find positions of p and q the moment of impact, adjust
-        p.move(-dt);
-        q.move(-dt);
-        pause = true
-
-        // reflection mechanics to update velocities
-        dx = p.x - q.x;
-        dy = p.y - q.y;
-
-        // movement for (time_step-dt)
-      }
-    }
+    collision(p, q);
+    // do ths for all particles p
   }
 
   renderer.render(scene, camera);
@@ -88,14 +58,47 @@ class Particle{
   }
 }
 
-function collision(p1, p2){
-  dx = p1.x - p2.x;
-  dy = p1.y - p2.y;
-  r = Math.pow(Math.pow(dx, 2) + Math.pow(dy, 2), 0.5);
+function collision(p, q){
+  if (p.x - 2*p.r < q.x && q.x < p.x + 2*p.r){
+    if (p.y - 2*p.r < q.y && q.y < p.y + 2*p.r){
+      dx = p.x - q.x;
+      dy = p.y - q.y;
+      r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
+      r_0_sq = 4*Math.pow(p.r, 2);
 
-  if (r < 2*p1.r){
-    return true;
-  } else {return false;}
+      // collision check
+      if (r_sq < r_0_sq){
+        dxv = p.x_v - q.x_v;
+        dyv = p.y_v - q.y_v;
+
+        // find fractional dt
+        a = Math.pow(dxv, 2) + Math.pow(dyv, 2);
+        b = 2*(dx*dxv + dy*dyv);
+        c = r_sq - r_0_sq;
+        dt = (b + Math.pow(Math.pow(b, 2) - 4*a*c, 0.5))/(2*a);
+        console.log(dt);
+
+        // find positions of p and q the moment of impact, adjust
+        p.move(-dt);
+        q.move(-dt);
+        // pause = true;
+
+        // reflection mechanics to update velocities
+        dx = p.x - q.x;
+        dy = p.y - q.y;
+        a_0 = dx*dxv + dy*dyv
+
+        p.x_v -= dx*a_0/(r_sq);
+        p.y_v -= dy*a_0/(r_sq);
+        q.x_v += dx*a_0/(r_sq);
+        q.y_v += dy*a_0/(r_sq);
+
+        // movement for (time_step-dt)
+        p.move(dt);
+        q.move(dt);
+      }
+    }
+  }
 }
 
 // ================== setup ==================
