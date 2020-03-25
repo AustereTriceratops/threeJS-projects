@@ -1,35 +1,15 @@
 var scene, camera, renderer;
 var aspect = window.innerWidth / window.innerHeight;
-var p, q;
+var timestep = 0.004;
+var particle_radius = 0.01;
 
-function init(){
-  setup();
+// v * dt < r  for accurate simulation
 
-  p = new Particle(0.1,0.13, 1, 0.1);
-  q = new Particle(0.6, 0);
-
-  animate();
-}
-
-
-var pause = false;
-function animate(){
-  if (!pause){
-    p.move();
-    q.move();
-
-    collision(p, q);
-    // do ths for all particles p
-  }
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(animate);
-}
 
 // ================= Physics =================
 
 class Particle{
-  constructor(x, y, x_v=0, y_v=0, radius=0.1) {
+  constructor(x, y, x_v=0, y_v=0, radius=particle_radius) {
     this.x = x;
     this.y = y;
     this.x_v = x_v;
@@ -48,11 +28,44 @@ class Particle{
     return circle
   }
 
-  move(dt=0.005){
+  move(dt=timestep){
     let x = this.x_v * dt;
     let y = this.y_v * dt;
     this.x += x;
     this.y += y;
+    let alpha, dx;
+
+    //wall detection built into move()
+    // useful since move() is called a lot in collision()
+    if (this.x < this.r){
+      alpha = dt*(this.r - this.x)/x;
+      dx = 2*alpha*this.x_v;
+      this.x_v = -this.x_v;
+      this.x += dx;
+      this.circle.translateX(dx);
+    }
+    if (this.x > aspect-this.r){
+      alpha = dt*(aspect - this.r - this.x)/x;
+      dx = 2*alpha*this.x_v;
+      this.x_v = -this.x_v;
+      this.x += dx;
+      this.circle.translateX(dx);
+    }
+    if (this.y > 1-this.r){
+      alpha = dt*(1 - this.r - this.y)/y;
+      dy = 2*alpha*this.y_v;
+      this.y_v *= -1;
+      this.y += dy;
+      this.circle.translateY(dy);
+    }
+    if (this.y < 0+this.r){
+      alpha = dt*(this.r - this.y)/y;
+      dy = 2*alpha*this.y_v;
+      this.y_v *= -1;
+      this.y += dy;
+      this.circle.translateY(dy);
+    }
+
     this.circle.translateX(x);
     this.circle.translateY(y);
   }
@@ -76,7 +89,6 @@ function collision(p, q){
         b = 2*(dx*dxv + dy*dyv);
         c = r_sq - r_0_sq;
         dt = (b + Math.pow(Math.pow(b, 2) - 4*a*c, 0.5))/(2*a);
-        console.log(dt);
 
         // find positions of p and q the moment of impact, adjust
         p.move(-dt);
@@ -86,12 +98,13 @@ function collision(p, q){
         // reflection mechanics to update velocities
         dx = p.x - q.x;
         dy = p.y - q.y;
-        a_0 = dx*dxv + dy*dyv
+        r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
+        alpha = dx*dxv + dy*dyv;
 
-        p.x_v -= dx*a_0/(r_sq);
-        p.y_v -= dy*a_0/(r_sq);
-        q.x_v += dx*a_0/(r_sq);
-        q.y_v += dy*a_0/(r_sq);
+        p.x_v -= dx*alpha/(r_sq);
+        p.y_v -= dy*alpha/(r_sq);
+        q.x_v += dx*alpha/(r_sq);
+        q.y_v += dy*alpha/(r_sq);
 
         // movement for (time_step-dt)
         p.move(dt);
@@ -101,10 +114,20 @@ function collision(p, q){
   }
 }
 
+function log_momentum(){
+  m = 0;
+  for (i=0; i<particles.length; i++){
+    m += Math.abs(particles[i].x_v);
+    m += Math.abs(particles[i].y_v);
+  }
+  console.log(m);
+}
+
+
 // ================== setup ==================
 
 function setup(){
-  camera = new THREE.OrthographicCamera(-1*aspect, 1*aspect, 1, -1, 0, 1);
+  camera = new THREE.OrthographicCamera(0, aspect, 1, 0, 0, 1);
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xcccccc);
@@ -122,4 +145,43 @@ function windowResize() {
   renderer.setSize( window.innerWidth, window.innerHeight-2);
 }
 
-init();
+var pause = false;
+function animate(){
+  if (!pause){
+    for (a=0; a<2; a++){
+      for (i=0; i<particles.length; i++){
+        for (j=0; j<i; j++){
+          collision(particles[i], particles[j]);
+        }
+      }
+      // detect collisions after particle initialization, then move
+      for (i=0; i<particles.length; i++){
+        particles[i].move();
+      }
+    }
+  }
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(animate);
+}
+
+// ===================== main =====================
+
+setup();
+
+// size of windows where particles spawn
+pr = particle_radius;
+x_size = aspect - 2*pr;
+y_size = 1 - 2*pr;
+
+var particles = Array(120);
+for (i=0; i<particles.length; i++){
+  particles[i] = new Particle(
+    pr + x_size*Math.random(), pr + y_size*Math.random(), Math.random()-0.5, Math.random()-0.5
+  );
+  if (i == 0){
+    particles[i].circle.material.color.setHex(0x72b886)
+  }
+}
+
+animate();
