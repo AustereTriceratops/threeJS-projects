@@ -93,7 +93,8 @@ float mandelbrot(vec2 c){
     float y_1_sq = z_1.y*z_1.y;
     vec2 z_1_sq = vec2(x_1_sq - y_1_sq, 2.0*z_1.x*z_1.y);
 
-    z = pset1.x*z_0_sq + c + pset1.y*cm(z_0_sq, z_0)
+    // the recurrence equation
+    z = pset1.x*z_0_sq + c + pset1.y*cm(z_0_sq, z_2)
     + pset1.z*z_1_sq + pset2.x*cm(z_0_sq, conj(z_1))
     + pset2.y*conj(cm(z_1, z_0)) + pset2.z*cm(z_0_sq, z_1);
 
