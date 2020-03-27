@@ -1,10 +1,34 @@
 var scene, camera, renderer;
 var aspect = window.innerWidth / window.innerHeight;
 var timestep = 0.004;
-var particle_radius = 0.01;
+var particle_radius = 0.006;
+var heat = 1.0;
+var population_size = 600;
+var num_bins = 20;
+var bin_increment = 1.0/population_size;
+
+var intervals = Array(num_bins);
+for (i=0; i<num_bins; i++){
+  intervals[i] = (i+1)*0.05;
+}
+
+// defined on runtime
+var bins = Array(num_bins).fill(0);
+var population;
+var graph;
 
 // v * dt < r  for accurate simulation
+// ===================== main =====================
 
+function main(){
+  setup();
+
+  population = new Population();
+  population.particles[0].circle.material.color.setHex(0x72b886);  //set one particle light green
+  graph = new BarGraph(bins, [0.8,0.8], [1,1]);
+
+  animate();
+}
 
 // ================= Physics =================
 
@@ -14,6 +38,7 @@ class Particle{
     this.y = y;
     this.x_v = x_v;
     this.y_v = y_v;
+    this.v_mag = Math.pow(Math.pow(this.x_v, 2) + Math.pow(this.x_v, 2), 0.5);
     this.r = radius;
     this.circle = this.create_geometry();
   }
@@ -33,35 +58,39 @@ class Particle{
     let y = this.y_v * dt;
     this.x += x;
     this.y += y;
-    let alpha, dx;
+    let alpha, dx, dy;
 
     //wall detection built into move()
     // useful since move() is called a lot in collision()
     if (this.x < this.r){
-      alpha = dt*(this.r - this.x)/x;
-      dx = 2*alpha*this.x_v;
-      this.x_v = -this.x_v;
+      alpha = dt*(this.r - this.x)/x; // fraction of timestep it's in wall
+      dx = alpha*this.x_v;
+      this.x_v = -heat*this.x_v;
+      dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
     }
     if (this.x > aspect-this.r){
       alpha = dt*(aspect - this.r - this.x)/x;
-      dx = 2*alpha*this.x_v;
-      this.x_v = -this.x_v;
+      dx = alpha*this.x_v;
+      this.x_v = -heat*this.x_v;
+      dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
     }
     if (this.y > 1-this.r){
       alpha = dt*(1 - this.r - this.y)/y;
-      dy = 2*alpha*this.y_v;
-      this.y_v *= -1;
+      dy = alpha*this.y_v;
+      this.y_v = -heat*this.y_v;
+      dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
     }
     if (this.y < 0+this.r){
       alpha = dt*(this.r - this.y)/y;
-      dy = 2*alpha*this.y_v;
-      this.y_v *= -1;
+      dy = alpha*this.y_v;
+      this.y_v = -heat*this.y_v;
+      dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
     }
@@ -71,60 +100,130 @@ class Particle{
   }
 }
 
-function collision(p, q){
-  if (p.x - 2*p.r < q.x && q.x < p.x + 2*p.r){
-    if (p.y - 2*p.r < q.y && q.y < p.y + 2*p.r){
-      dx = p.x - q.x;
-      dy = p.y - q.y;
-      r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
-      r_0_sq = 4*Math.pow(p.r, 2);
 
-      // collision check
-      if (r_sq < r_0_sq){
-        dxv = p.x_v - q.x_v;
-        dyv = p.y_v - q.y_v;
+class Population{
+  constructor(size=population_size, bin_size=num_bins){
+    this.particles = Array(size);
+    this.velocity_dist = [];
+    this.bins = Array(bin_size);
 
-        // find fractional dt
-        a = Math.pow(dxv, 2) + Math.pow(dyv, 2);
-        b = 2*(dx*dxv + dy*dyv);
-        c = r_sq - r_0_sq;
-        dt = (b + Math.pow(Math.pow(b, 2) - 4*a*c, 0.5))/(2*a);
+    // offset + size of windows where particles spawn
+    let pr = particle_radius;
+    let x_size = aspect - 2*pr;
+    let y_size = 1 - 2*pr;
 
-        // find positions of p and q the moment of impact, adjust
-        p.move(-dt);
-        q.move(-dt);
-        // pause = true;
+    for (i=0; i<size; i++){  // create particles
+      this.particles[i] = new Particle(
+        pr + x_size*Math.random(), pr + y_size*Math.random(), 0.7*(Math.random()-0.5), 0.7*(Math.random()-0.5)
+      );
 
-        // reflection mechanics to update velocities
-        dx = p.x - q.x;
-        dy = p.y - q.y;
-        r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
-        alpha = dx*dxv + dy*dyv;
+      let v_mag = this.particles[i].v_mag; // initialize velocity distribution
+      this.velocity_dist.push(v_mag);
 
-        p.x_v -= dx*alpha/(r_sq);
-        p.y_v -= dy*alpha/(r_sq);
-        q.x_v += dx*alpha/(r_sq);
-        q.y_v += dy*alpha/(r_sq);
+      var j;
+      for (j=0; j<bin_size; j++){ // initialize bins for the bar graph
+        if (v_mag < intervals[j]){
+          bins[j] += bin_increment;
+          break;
+        }
+      }
+    }
+  }
 
-        // movement for (time_step-dt)
-        p.move(dt);
-        q.move(dt);
+  collision(p, q){
+    p = this.particles[p];
+    q = this.particles[q];
+
+    if (p.x - 2*p.r < q.x && q.x < p.x + 2*p.r){
+      if (p.y - 2*p.r < q.y && q.y < p.y + 2*p.r){
+        let dx = p.x - q.x;
+        let dy = p.y - q.y;
+        let r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
+        let r_0_sq = 4*Math.pow(p.r, 2);
+
+        // collision check
+        if (r_sq < r_0_sq){
+          let dxv = p.x_v - q.x_v;
+          let dyv = p.y_v - q.y_v;
+
+          // find fractional dt
+          let a = Math.pow(dxv, 2) + Math.pow(dyv, 2);
+          let b = 2*(dx*dxv + dy*dyv);
+          let c = r_sq - r_0_sq;
+          let dt = (b + Math.pow(Math.pow(b, 2) - 4*a*c, 0.5))/(2*a);
+
+          // find positions of p and q the moment of impact, adjust
+          p.move(-dt);
+          q.move(-dt);
+
+          // reflection mechanics to update velocities
+          dx = p.x - q.x;
+          dy = p.y - q.y;
+          r_sq = Math.pow(dx, 2) + Math.pow(dy, 2);
+          let alpha = dx*dxv + dy*dyv;
+
+          p.x_v -= dx*alpha/(r_sq);
+          p.y_v -= dy*alpha/(r_sq);
+          p.v_mag = Math.pow(Math.pow(p.x_v, 2) + Math.pow(p.y_v, 2), 0.5);
+          q.x_v += dx*alpha/(r_sq);
+          q.y_v += dy*alpha/(r_sq);
+          q.v_mag = Math.pow(Math.pow(q.x_v, 2) + Math.pow(q.y_v, 2), 0.5);
+
+          // movement for (time_step-dt)
+          p.move(dt);
+          q.move(dt);
+        }
       }
     }
   }
 }
 
-function log_momentum(){
-  m = 0;
-  for (i=0; i<particles.length; i++){
-    m += Math.abs(particles[i].x_v);
-    m += Math.abs(particles[i].y_v);
+
+class BarGraph{
+  constructor(bins, bottom_left, top_right){
+    this.material = new THREE.MeshBasicMaterial({color:"black", opacity: 0.2, transparent: true});
+    this.bins = bins;
+    this.bars = [];
+    this.bl = bottom_left;
+    this.tr = top_right;
+    this.bar_width = aspect*(top_right[0]-bottom_left[0]) / bins.length;
+    this.max_height = this.tr[1] - this.bl[1];
+    this.create_bars();
   }
-  console.log(m);
+
+  create_bars(){
+    let w = this.bar_width;
+    let h = this.max_height;
+
+    for (i=0; i<this.bins.length; i++){
+      let bar = new THREE.PlaneGeometry(w, 1*this.max_height);
+      let barmesh = new THREE.Mesh(bar, this.material);
+
+      barmesh.scale.set(1, 2*this.bins[i], 0);
+      barmesh.position.set(i*w + w/2 + aspect*this.bl[0], h*this.bins[i] + this.bl[1], 0);
+
+      this.bars.push(barmesh);
+      scene.add(barmesh);
+    }
+  }
+
+  update_bins(bins){
+    this.bins = bins;
+    let w = this.bar_width;
+    let h = this.max_height;
+
+    for(i=0; i<this.bars.length; i++){
+      let bar = this.bars[i];
+      bar.position.set(0, 0, 0);
+      bar.scale.set(1, 2*bins[i], 0);
+      bar.position.set(i*w + w/2 + aspect*this.bl[0], h*bins[i] + this.bl[1], 0);
+    }
+  }
 }
 
 
 // ================== setup ==================
+
 
 function setup(){
   camera = new THREE.OrthographicCamera(0, aspect, 1, 0, 0, 1);
@@ -137,7 +236,6 @@ function setup(){
   document.body.appendChild( renderer.domElement );
 }
 
-
 function windowResize() {
   aspect = window.innerWidth / window.innerHeight;
   camera.aspect =  aspect;
@@ -145,43 +243,39 @@ function windowResize() {
   renderer.setSize( window.innerWidth, window.innerHeight-2);
 }
 
+
 var pause = false;
 function animate(){
+  bins = Array(num_bins).fill(0);
+
   if (!pause){
-    for (a=0; a<2; a++){
-      for (i=0; i<particles.length; i++){
-        for (j=0; j<i; j++){
-          collision(particles[i], particles[j]);
-        }
-      }
-      // detect collisions after particle initialization, then move
-      for (i=0; i<particles.length; i++){
-        particles[i].move();
+    for (i=0; i<population.particles.length; i++){
+      for (j=0; j<i; j++){
+        population.collision(i, j);
       }
     }
+    // detect collisions after particle initialization, then move
+    for (i=0; i<population.particles.length; i++){
+      population.particles[i].move();
+
+      // update velocity distribution and bins
+      // may as well use this loop for those things rather than
+      // do them separately by calling another loop - messier but more efficient
+      v_mag = population.particles[i].v_mag
+      population.velocity_dist.push(v_mag);
+      for (j=0; j<bins.length; j++){
+        if (v_mag < intervals[j]){
+          bins[j] += bin_increment;
+          break;
+        }
+      }
+    }
+    graph.update_bins(bins);
   }
 
   renderer.render(scene, camera);
   requestAnimationFrame(animate);
 }
 
-// ===================== main =====================
 
-setup();
-
-// size of windows where particles spawn
-pr = particle_radius;
-x_size = aspect - 2*pr;
-y_size = 1 - 2*pr;
-
-var particles = Array(120);
-for (i=0; i<particles.length; i++){
-  particles[i] = new Particle(
-    pr + x_size*Math.random(), pr + y_size*Math.random(), Math.random()-0.5, Math.random()-0.5
-  );
-  if (i == 0){
-    particles[i].circle.material.color.setHex(0x72b886)
-  }
-}
-
-animate();
+main();
