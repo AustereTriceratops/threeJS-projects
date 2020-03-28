@@ -1,9 +1,9 @@
 var scene, camera, renderer;
 var aspect = window.innerWidth / window.innerHeight;
 var timestep = 0.004;
-var particle_radius = 0.006;
-var heat = 1.0;
-var population_size = 600;
+var particle_radius = 0.008;
+var heat = 0;  // in [-1, 1]
+var population_size = 300;
 var num_bins = 20;
 var bin_increment = 1.0/population_size;
 
@@ -25,7 +25,7 @@ function main(){
 
   population = new Population();
   population.particles[0].circle.material.color.setHex(0x72b886);  //set one particle light green
-  graph = new BarGraph(bins, [0.8,0.8], [1,1]);
+  graph = new BarGraph(bins, [0.8,0.8], [1,1.2]);
 
   animate();
 }
@@ -65,15 +65,15 @@ class Particle{
     if (this.x < this.r){
       alpha = dt*(this.r - this.x)/x; // fraction of timestep it's in wall
       dx = alpha*this.x_v;
-      this.x_v = -heat*this.x_v;
+      this.x_v = -this.x_v*logistic(heat, 0.3);
       dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
     }
-    if (this.x > aspect-this.r){
-      alpha = dt*(aspect - this.r - this.x)/x;
+    if (this.x > 0.8*aspect-this.r){
+      alpha = dt*(0.8*aspect - this.r - this.x)/x;
       dx = alpha*this.x_v;
-      this.x_v = -heat*this.x_v;
+      this.x_v = -this.x_v;
       dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
@@ -81,7 +81,7 @@ class Particle{
     if (this.y > 1-this.r){
       alpha = dt*(1 - this.r - this.y)/y;
       dy = alpha*this.y_v;
-      this.y_v = -heat*this.y_v;
+      this.y_v = -this.y_v;
       dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
@@ -89,7 +89,7 @@ class Particle{
     if (this.y < 0+this.r){
       alpha = dt*(this.r - this.y)/y;
       dy = alpha*this.y_v;
-      this.y_v = -heat*this.y_v;
+      this.y_v = -this.y_v;
       dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
@@ -109,7 +109,7 @@ class Population{
 
     // offset + size of windows where particles spawn
     let pr = particle_radius;
-    let x_size = aspect - 2*pr;
+    let x_size = 0.8*aspect - 2*pr;
     let y_size = 1 - 2*pr;
 
     for (i=0; i<size; i++){  // create particles
@@ -169,7 +169,7 @@ class Population{
           q.y_v += dy*alpha/(r_sq);
           q.v_mag = Math.pow(Math.pow(q.x_v, 2) + Math.pow(q.y_v, 2), 0.5);
 
-          // movement for (time_step-dt)
+          // movement for (time_step dt)
           p.move(dt);
           q.move(dt);
         }
@@ -183,28 +183,42 @@ class BarGraph{
   constructor(bins, bottom_left, top_right){
     this.material = new THREE.MeshBasicMaterial({color:"black", opacity: 0.2, transparent: true});
     this.bins = bins;
-    this.bars = [];
     this.bl = bottom_left;
     this.tr = top_right;
     this.bar_width = aspect*(top_right[0]-bottom_left[0]) / bins.length;
     this.max_height = this.tr[1] - this.bl[1];
-    this.create_bars();
+    this.backdrop = this.create_backdrop();
+    this.bars = this.create_bars();
+  }
+
+  create_backdrop(){
+    let w = aspect*(this.tr[0] - this.bl[0]);
+    let h = this.tr[1] - this.bl[1];
+    let bd = new THREE.PlaneGeometry(1,1);
+    let backdrop = new THREE.Mesh(bd, this.material);
+    backdrop.scale.set(w, h, 0);
+    backdrop.position.set(aspect*this.bl[0] + w/2, this.bl[1] + h/2, 0 );
+
+    scene.add(backdrop);
+    return backdrop;
   }
 
   create_bars(){
     let w = this.bar_width;
     let h = this.max_height;
+    let bars = []
 
     for (i=0; i<this.bins.length; i++){
-      let bar = new THREE.PlaneGeometry(w, 1*this.max_height);
+      let bar = new THREE.PlaneGeometry(w, this.max_height);
       let barmesh = new THREE.Mesh(bar, this.material);
 
       barmesh.scale.set(1, 2*this.bins[i], 0);
       barmesh.position.set(i*w + w/2 + aspect*this.bl[0], h*this.bins[i] + this.bl[1], 0);
 
-      this.bars.push(barmesh);
+      bars.push(barmesh);
       scene.add(barmesh);
     }
+    return bars;
   }
 
   update_bins(bins){
@@ -219,6 +233,10 @@ class BarGraph{
       bar.position.set(i*w + w/2 + aspect*this.bl[0], h*bins[i] + this.bl[1], 0);
     }
   }
+}
+
+function logistic(alpha, m){
+  return 1-m + 2*m/(1 + Math.exp(-alpha));
 }
 
 
