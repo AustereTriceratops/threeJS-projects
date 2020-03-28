@@ -2,14 +2,23 @@ var scene, camera, renderer;
 var aspect = window.innerWidth / window.innerHeight;
 var timestep = 0.004;
 var particle_radius = 0.008;
-var heat = 0;  // in [-1, 1]
 var population_size = 300;
 var num_bins = 20;
-var bin_increment = 1.0/population_size;
+var bin_increment = 2.0/population_size;
 
 var intervals = Array(num_bins);
 for (i=0; i<num_bins; i++){
   intervals[i] = (i+1)*0.05;
+}
+
+
+// GUI
+var gui = new dat.GUI({width: window.innerWidth*0.2});
+var parameters = {
+  heat: 0.001,
+}
+for (var key in parameters){
+  gui.add(parameters, key, -1.01, 1.01);
 }
 
 // defined on runtime
@@ -25,7 +34,7 @@ function main(){
 
   population = new Population();
   population.particles[0].circle.material.color.setHex(0x72b886);  //set one particle light green
-  graph = new BarGraph(bins, [0.8,0.8], [1,1.2]);
+  graph = new BarGraph(bins, [0,0.7], [0.2,1]);
 
   animate();
 }
@@ -65,15 +74,15 @@ class Particle{
     if (this.x < this.r){
       alpha = dt*(this.r - this.x)/x; // fraction of timestep it's in wall
       dx = alpha*this.x_v;
-      this.x_v = -this.x_v*logistic(heat, 0.3);
+      this.x_v = -this.x_v*logistic(parameters["heat"], 0.3);
       dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
     }
-    if (this.x > 0.8*aspect-this.r){
-      alpha = dt*(0.8*aspect - this.r - this.x)/x;
+    if (this.x > aspect-this.r){
+      alpha = dt*(aspect - this.r - this.x)/x;
       dx = alpha*this.x_v;
-      this.x_v = -this.x_v;
+      this.x_v = -this.x_v*logistic(parameters["heat"], 0.3);
       dx -= alpha*this.x_v;
       this.x += dx;
       this.circle.translateX(dx);
@@ -81,7 +90,7 @@ class Particle{
     if (this.y > 1-this.r){
       alpha = dt*(1 - this.r - this.y)/y;
       dy = alpha*this.y_v;
-      this.y_v = -this.y_v;
+      this.y_v = -this.y_v*logistic(parameters["heat"], 0.3);
       dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
@@ -89,7 +98,7 @@ class Particle{
     if (this.y < 0+this.r){
       alpha = dt*(this.r - this.y)/y;
       dy = alpha*this.y_v;
-      this.y_v = -this.y_v;
+      this.y_v = -this.y_v*logistic(parameters["heat"], 0.3);
       dy -= alpha*this.y_v;
       this.y += dy;
       this.circle.translateY(dy);
@@ -109,7 +118,7 @@ class Population{
 
     // offset + size of windows where particles spawn
     let pr = particle_radius;
-    let x_size = 0.8*aspect - 2*pr;
+    let x_size = aspect - 2*pr;
     let y_size = 1 - 2*pr;
 
     for (i=0; i<size; i++){  // create particles
