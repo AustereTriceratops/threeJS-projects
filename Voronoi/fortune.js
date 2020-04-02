@@ -212,7 +212,7 @@ function equal_arrays(a, b){
   return true;
 }
 
-function remove_duplicates(arr){
+function remove_duplicate_arrays(arr){
   result = [];
   for (var i = 0; i < arr.length; i++){
     if (!in_array(arr[i], result)){
@@ -233,7 +233,7 @@ function in_array(a, b){ // bool: a in b
 
 function compare_pairs(old_p, new_p){
   // find all common pairs between old_p (a) and new_p (b)
-  all_pairs = remove_duplicates(old_p.concat(new_p));
+  all_pairs = remove_duplicate_arrays(old_p.concat(new_p));
 
   old_counts = Array(all_pairs.length).fill(0);
   new_counts = Array(all_pairs.length).fill(0);
@@ -276,7 +276,7 @@ function compare_pairs(old_p, new_p){
   return [different_pairs_1, different_pairs_2];
 }
 
-function find_intersections(parabolae, active_indices, k, max){
+function find_intersections(parabolae, active_indices, k){
   let intersections = [];
 
   for (var i=0; i < k; i++){
@@ -292,7 +292,7 @@ function find_intersections(parabolae, active_indices, k, max){
 
     let this_func = parabolae[i].func;
     let pvec2 = parabolae[i].vec;
-    new Curve(this_func, [0, 1.0], domain="y", res=60, alpha=1-k/max);  //displaying purposes, erase later
+    //new Curve(this_func, [0, 1.0], domain="y", res=60, alpha=1-k/max);  //displaying purposes, erase later
 
     // find all intersections between parabolae i and j with j < i
     for (var j = 0; j < i; j++){
@@ -337,8 +337,72 @@ function find_intersections(parabolae, active_indices, k, max){
   return intersections;
 }
 
+function active_indices_from_pairs(pairs){
+  active_indices = [];
+  for (j=0; j < pairs.length; j++){
+    if (!active_indices.includes(pairs[j][0])){
+      active_indices.push(pairs[j][0])
+    }
+    if (!active_indices.includes(pairs[j][1])){
+      active_indices.push(pairs[j][1])
+    }
+  }
+  return active_indices;
+}
+
+function flatten(a){  // a is array of arrays
+  let flat = [];
+
+  for (var i = 0; i < a.length; i++){
+    for (var j = 0; j < a[i].length; j++){
+      flat.push(a[i][j])
+    }
+  }
+  return flat;
+}
+
+function find_duplicates(a){
+  a_ = [];
+  for (var i = 0; i < a.length; i++){
+    if (a_.includes(a[i])){
+      return a[i];
+    } else {
+      a_.push(a[i]);
+    }
+  }
+  return null;
+}
+
+function remove_duplicates(a){
+  result = [];
+  for (var i = 0; i < a.length; i++){
+    if (!result.includes(a[i])){
+      result.push(a[i]);
+    }
+  }
+  return result;
+}
+
+function create_parabolae(points, active_indices, directix){
+  let p = Array(points.length).fill(0);
+  for (var i = 0; i < points.length; i++){
+    if (active_indices.includes(i)){
+      p[i] = new Parabola(points[i].y, points[i].x, directix);
+    }
+  }
+  return p;
+}
+
+function intersection_to_pairs(intersections){
+  let pairs = [];
+  for (j=0; j < intersections.length; j++){
+    pairs.push(intersections[j].indices);
+  }
+  return pairs
+}
 
 
+var max = 13;
 function fortune(set_of_points){ // return set of lines indicating vornoi boundaries
   let points = set_of_points;
   let borders = [];
@@ -347,19 +411,16 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
 
   var active_indices = [];
   var pairs_prev = [];
-  var max = 10;
 
   for (k = 0; k < max; k++){
     // this should be done more efficiently, converts all points when only some are needed
-    parabolae = points.map(p => new Parabola(p.y, p.x, points[k].x));
+    parabolae = create_parabolae(points, active_indices, points[k].x);
 
-    intersections = find_intersections(parabolae, active_indices, k, max); //remove last two argumetns later
+    // find intersections on beach line
+    intersections = find_intersections(parabolae, active_indices, k); //remove last two argumetns later
     intersections.map(i => new Point(i.x, i.y)); // for display
+    pairs = intersection_to_pairs(intersections);
 
-    pairs = [];
-    for (j=0; j < intersections.length; j++){
-      pairs.push(intersections[j].indices);
-    }
 
     let state = compare_pairs(pairs_prev, pairs);
     s_0 = state[0];
@@ -368,8 +429,23 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
 
     if (diff > 1){
       console.log("multiple trisections", s_0, s_1);
+
     } else if (diff == 1){
-      console.log("trisection", s_0, s_1);
+      let s_flat = flatten(s_0);
+      let trisecting_indices = remove_duplicates(s_flat);
+      let absorbed = find_duplicates(s_flat);
+
+      let p_0 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.001); //may be 2 or 3 elements
+      let p_1 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.011);
+
+      intersections_0 = find_intersections(p_0, trisecting_indices, k);
+      intersections_1 = find_intersections(p_1, trisecting_indices, k);
+      pairs_0 = intersection_to_pairs(intersections_0);
+      pairs_1 = intersection_to_pairs(intersections_1);
+      // intersections need to be filtered out for y values between the foci
+      // assert pairs_1 must be the same as pairs_0
+
+      console.log("trisection", pairs_0, pairs_1);
     }
 
     // find trisection. move the directix between the rightmost active point
@@ -399,18 +475,9 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
     pairs.push(new_pair);
 
     //update active indices
-    active_indices = [k];
-    for (j=0; j < pairs.length; j++){
-      if (!active_indices.includes(pairs[j][0])){
-        active_indices.push(pairs[j][0])
-      }
-      if (!active_indices.includes(pairs[j][1])){
-        active_indices.push(pairs[j][1])
-      }
-    }
+    active_indices = flatten(pairs);
 
     console.log(pairs);
-    console.log(active_indices);
 
     pairs_prev = pairs;
   }
