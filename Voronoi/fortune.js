@@ -461,7 +461,30 @@ function resolve_trisection(points, trisecting_indices, passing_indices, k, alph
     pairs_1 = intersection_to_pairs(intersections_1);
   }
   console.log("Full trisection", pairs_0, pairs_1);
-  return [intersections_0, intersections_1];
+
+  let vertex_y, vertex_x; // doesn't work when one is vertical
+  let dx_0 = intersections_0[0].x - intersections_1[0].x;
+  let dx_1 = intersections_0[1].x - intersections_1[1].x;
+  let s_0 = (intersections_0[0].y - intersections_1[0].y)/dx_0;
+  let s_1 = (intersections_0[1].y - intersections_1[1].y)/dx_1;
+  c_0 = intersections_0[0].y - s_0*intersections_0[0].x;
+  c_1 = intersections_0[1].y - s_1*intersections_0[1].x;
+
+  if (dx_0 == 0){
+    vertex_x = intersections_0[0].x;
+    vertex_y = s_1*vertex_x + c_1;
+    console.log("singularity", vertex_x);
+  }
+  else if (dx_1 == 0){
+    vertex_x = intersections_0[1].x;
+    vertex_y = s_0*vertex_x + c_0;
+  }
+  else {
+    vertex_x = (c_1 - c_0)/(s_0 - s_1);
+    vertex_y = s_0*vertex_x + c_0;
+  }
+
+  return [vertex_x, vertex_y];
 }
 
 
@@ -529,14 +552,7 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
         new Point(0, vertex_y, color=0x307fa6); // vornoi vertex on left edge
 
       } else {
-        let [intersections_0, intersections_1] = resolve_trisection(points, trisecting_indices, passing, k, alpha);
-        let vertex_y, vertex_x;
-        let s_0 = (intersections_0[0].y - intersections_1[0].y)/(intersections_0[0].x - intersections_1[0].x);
-        let s_1 = (intersections_0[1].y - intersections_1[1].y)/(intersections_0[1].x - intersections_1[1].x);
-        c_0 = intersections_0[0].y - s_0*intersections_0[0].x;
-        c_1 = intersections_0[1].y - s_1*intersections_0[1].x;
-        vertex_x = (c_1 - c_0)/(s_0 - s_1);
-        vertex_y = s_0*vertex_x + c_0;
+        let [vertex_x, vertex_y] = resolve_trisection(points, trisecting_indices, passing, k, alpha);
 
         new Point(vertex_x, vertex_y, color=0x307fa6);
       }
@@ -567,8 +583,6 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
 
     //update active indices
     active_indices = flatten(pairs);
-
-    console.log(pairs);
 
     pairs_prev = pairs;
   }
