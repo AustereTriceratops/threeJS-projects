@@ -401,9 +401,10 @@ function intersection_to_pairs(intersections){
   return pairs
 }
 
-function filter_intersections(intersections, pair){ // not good
+function filter_intersections(intersections, pair){
   let result = [];
-  // find a way to filter to just intersections involving the merging pair
+
+  // filter to just intersections involving the merging pair (4 max)
   for (var i = 0; i < intersections.length; i++){
     if (intersections[i].indices.includes(pair[0]) || intersections[i].indices.includes(pair[1])){
       result.push(intersections[i]);
@@ -411,8 +412,17 @@ function filter_intersections(intersections, pair){ // not good
   }
   result.sort((a,b) => (a.y > b.y) ? 1 : -1);
 
-  result = result.slice(1,3);
-  return result;
+  r = [];
+  var min_dist = 100;
+  for (var i = 0; i < result.length-1; i++){
+    if (!equal_arrays(result[i].indices, result[i+1].indices)){
+      if (result[i+1].y - result[i].y < min_dist ){
+        min_dist = result[i+1].y - result[i].y;
+        r = [result[i], result[i+1]]
+      }
+    }
+  }
+  return r
 }
 
 function a_exclude_b(a,b){ // a is a set, b is an element
@@ -424,6 +434,34 @@ function a_exclude_b(a,b){ // a is a set, b is an element
     }
   }
   return result;
+}
+
+function resolve_trisection(points, trisecting_indices, passing_indices, k, alpha = 0.001){
+  let p_0 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.0001); //may be 2 or 3 elements
+  let p_1 = create_parabolae(points, trisecting_indices, points[k-1].x + alpha + 0.0001);
+  // step size change to be some fraction between points[k-1].x and points[k].x
+
+  intersections_0 = find_intersections(p_0, trisecting_indices, k);
+  intersections_0 = filter_intersections(intersections_0, passing_indices);
+  pairs_0 = intersection_to_pairs(intersections_0);
+  intersections_1 = find_intersections(p_1, trisecting_indices, k);
+  intersections_1 = filter_intersections(intersections_1, passing_indices);
+  pairs_1 = intersection_to_pairs(intersections_1);
+
+  while (!equal_arrays(pairs_0[0], pairs_1[0]) || !equal_arrays(pairs_0[1], pairs_1[1])){
+    alpha = alpha/2;
+    let p_0 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.0001);
+    let p_1 = create_parabolae(points, trisecting_indices, points[k-1].x + alpha + 0.0001);
+
+    intersections_0 = find_intersections(p_0, trisecting_indices, k);
+    intersections_0 = filter_intersections(intersections_0, passing_indices);
+    pairs_0 = intersection_to_pairs(intersections_0);
+    intersections_1 = find_intersections(p_1, trisecting_indices, k);
+    intersections_1 = filter_intersections(intersections_1, passing_indices);
+    pairs_1 = intersection_to_pairs(intersections_1);
+  }
+  console.log("Full trisection", pairs_0, pairs_1);
+  return [intersections_0, intersections_1];
 }
 
 
@@ -462,12 +500,11 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
       let absorbed = find_duplicates(s_flat);
       let passing = a_exclude_b(trisecting_indices, absorbed);
       let pairs_0, pairs_1;
+      let alpha = 0.005
 
       if (absorbed == 'l'){
         let p_0 = create_parabolae(points, passing, points[k].x); //may be 2 or 3 elements
         let p_1 = create_parabolae(points, passing, points[k].x - 0.005);
-
-        console.log("Trisection at edge");
 
         intersections_0 = find_intersections(p_0, trisecting_indices, k);
         intersections_0.sort((a, b) => (a.y > b.y) ? 1 : -1);
@@ -475,11 +512,11 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
 
         intersections_1 = find_intersections(p_1, trisecting_indices, k);
         intersections_1.sort((a, b) => (a.y > b.y) ? 1 : -1);
-        if (intersections_1.length < 1){ // sometimes this is empty
+        if (intersections_1.length < 2){ // sometimes this is empty
           pairs_1 = [];
         } else {pairs_1 = intersections_1[1].indices;}
-        let vertex_y;
 
+        let vertex_y;
         if (equal_arrays(pairs_0, pairs_1)){
           let dx = intersections_0[1].x - intersections_1[1].x;
           let dy = intersections_0[1].y - intersections_1[1].y;
@@ -488,34 +525,29 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
           vertex_y = intersections_0[1].y;
         }
 
-        new Point(0, vertex_y); // vornoi vertex on left edge
+        console.log("Trisection at edge", pairs_0, pairs_1);
+        new Point(0, vertex_y, color=0x307fa6); // vornoi vertex on left edge
 
       } else {
-        let p_0 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.0001); //may be 2 or 3 elements
-        let p_1 = create_parabolae(points, trisecting_indices, points[k-1].x + 0.0051);
+        let [intersections_0, intersections_1] = resolve_trisection(points, trisecting_indices, passing, k, alpha);
+        let vertex_y, vertex_x;
+        let s_0 = (intersections_0[0].y - intersections_1[0].y)/(intersections_0[0].x - intersections_1[0].x);
+        let s_1 = (intersections_0[1].y - intersections_1[1].y)/(intersections_0[1].x - intersections_1[1].x);
+        c_0 = intersections_0[0].y - s_0*intersections_0[0].x;
+        c_1 = intersections_0[1].y - s_1*intersections_0[1].x;
+        vertex_x = (c_1 - c_0)/(s_0 - s_1);
+        vertex_y = s_0*vertex_x + c_0;
 
-        intersections_0 = find_intersections(p_0, trisecting_indices, k);
-        intersections_0 = filter_intersections(intersections_0, passing);
-        pairs_0 = intersection_to_pairs(intersections_0);
-        intersections_1 = find_intersections(p_1, trisecting_indices, k);
-        intersections_1 = filter_intersections(intersections_1, passing);
-        pairs_1 = intersection_to_pairs(intersections_1);
-
-        console.log("Full trisection", intersections_0, intersections_1); // output doesn't make sense
+        new Point(vertex_x, vertex_y, color=0x307fa6);
       }
 
-      // assert pairs_1 must be the same as pairs_0
-      if (pairs_1.length - pairs_0.length != 0){
-        console.log("overjumped");
-      }
-
-      //console.log("trisection", trisecting_indices, pairs_0, absorbed);
+      console.log("trisection", s_0, s_1);
     }
 
     // may need to introduce cell datatype for vertex informatio
 
 
-    // find intersection with of the next point: points[k]
+    // find intersection with the next point: points[k]
     y_val = points[k].y;
     var min_value = 0;
     new_pair = [k, 'l'];
