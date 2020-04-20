@@ -23,9 +23,6 @@ function main(){
   l1.create_hitbox(0.05);
   //l1.add_to(sceneUI);
 
-  fiber = new ParametricCurve(hopf_fiber(params.x, params.y), [0, 2*pi], res=80);
-  fiber.add_to(scene);
-
   animate();
 }
 
@@ -60,9 +57,12 @@ function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
 
 
 function animate(){
-  if (fiber.needs_update){
-    let params = controls.mouse_to_local(mouseCoords);
-    fiber.updateFunc(hopf_fiber(params.x,params.y));
+  if (controls.selected != null){
+    let ind = controls.selected.index;
+    if (controls.fibers[ind].needs_update){
+      let params = controls.mouse_to_local(mouseCoords);
+      controls.fibers[ind].updateFunc(hopf_fiber(params.x,params.y));
+    }
   }
 
   renderer.autoClear = true;
@@ -82,6 +82,7 @@ function setup(){
   document.addEventListener( 'mousedown', mouseDown, false );
   document.addEventListener( 'mousemove', onMove, false );
   document.addEventListener( 'mouseup', mouseUp, false );
+  document.addEventListener( 'dblclick', doubleClick, false );
 
   camera = new THREE.PerspectiveCamera(45, aspect);
   camera.position.set(0, 0, 6);
@@ -113,11 +114,9 @@ function setMouseCoords(event){
 }
 
 function mouseDown(event){
-  raycaster.setFromCamera(mouseCoords, cameraUI);
-  let intersection = raycaster.intersectObject(controls.nodes[0].hitbox);
-  if (intersection.length){
-    controls.selected = controls.nodes[0];
-  }
+  for (var i = 0; i < controls.nodes.length; i++){
+    controls.check_for_selection(i);
+  } //break loop once selection found
 
   let intersection2 = raycaster.intersectObject(l1.hitbox);
   if (intersection2.length){
@@ -135,22 +134,24 @@ function onMove(event){
     if (controls.in_bounding_box(mouseCoords)){
       controls.selected.update_position(mouseX*aspect,  mouseY, 0);
 
-      fiber.needs_update = true;  //updates on next render call
+      let ind = controls.selected.index;
+      controls.fibers[ind].needs_update = true;  //updates on next render call
     }
   }
 
-  raycaster.setFromCamera(mouseCoords, cameraUI);
-  let intersection = raycaster.intersectObject(controls.nodes[0].hitbox);
-  if (intersection.length){
-    controls.nodes[0].highlight();
-  } else {
-    controls.nodes[0].unhighlight();
+  for (var i = 0; i < controls.nodes.length; i++){
+    controls.check_for_highlight(i);
   }
 
 }
 
 function mouseUp(){
   controls.selected = null;
+}
+
+function doubleClick(event){
+  let local_coords = controls.mouse_to_local(mouseCoords);
+  controls.add_node(local_coords);
 }
 
 //

@@ -9,7 +9,7 @@ class Point{
     this.interactive = interactive;
     this.highlighted = false;
     if (interactive){
-      this.create_hitbox(0.05)
+      this.create_hitbox(0.03);
     }
 
     this.circle = this.createGeometry();
@@ -193,11 +193,11 @@ class ControlPad{
 
     this.backdrop = new Rect(this.bl, this.tr, {fill_color:0xff918a, opacity:0.4, outline:false});
     this.backdrop.fill.translateZ(0.1);
-
-    this.nodes = [new Point(top_right[0] - 0.05,top_right[1] - 0.05, {interactive: true, color:0x9452eb})];
-
     this.backdrop.add_to(sceneUI);
-    this.nodes[0].add_to(sceneUI);
+
+    this.nodes = [];
+    this.fibers = [];
+    this.add_node(new THREE.Vector2(pi, pi/2 + 0.02));
   }
 
   in_bounding_box(vec2){
@@ -218,11 +218,54 @@ class ControlPad{
 
   node_to_local(node){
     let loc = new THREE.Vector2(node.x, node.y);
-    let x = this.xrange[0] + this.dx*(loc.x - this.bl[0])/(this.width);
-    let y = this.yrange[0] + this.dy*(loc.y - this.bl[1])/(this.height);
+    let x = this.xrange[0] + this.dx*(loc.x - this.bl[0])/this.width;
+    let y = this.yrange[0] + this.dy*(loc.y - this.bl[1])/this.height;
     return new THREE.Vector2(x, y);
-
   }
+
+  local_to_world(loc){
+    let x = this.bl[0] + this.width*(loc.x - this.xrange[0])/this.dx;
+    let y = this.bl[1] + this.height*(loc.y - this.yrange[0])/this.dy;
+    return new THREE.Vector2(x, y);
+  }
+
+  add_node(loc){
+    if (loc.x < this.xrange[1] && loc.y < this.yrange[1] && loc.x > this.xrange[0] && loc.y > this.yrange[0] ){
+      let pos = this.local_to_world(loc);
+      let ind = this.nodes.length;
+      this.nodes.push(new Point(pos.x, pos.y, {interactive: true, color:0xc265b5}));
+      this.nodes[ind].index = ind;
+      this.nodes[ind].add_to(sceneUI);
+      this.create_fiber(ind);
+    }
+  }
+
+  check_for_selection(ind){
+    raycaster.setFromCamera(mouseCoords, cameraUI);
+    let intersection = raycaster.intersectObject(this.nodes[ind].hitbox);
+    if (intersection.length){
+      this.selected = this.nodes[ind];
+    }
+  }
+
+  check_for_highlight(ind){
+    raycaster.setFromCamera(mouseCoords, cameraUI);
+    let intersection = raycaster.intersectObject(this.nodes[ind].hitbox);
+    if (intersection.length){
+      this.nodes[ind].highlight();
+    } else {
+      this.nodes[ind].unhighlight();
+    }
+  }
+
+  create_fiber(ind){ //maybe nodes should cache their local coordinates
+    let params = this.node_to_local(this.nodes[ind]);
+    let fiber = new ParametricCurve(hopf_fiber(params.x, params.y), [0, 2*pi]);
+    fiber.index = ind;
+    fiber.add_to(scene);
+    this.fibers.push(fiber)
+  }
+
 }
 
 
