@@ -197,10 +197,10 @@ class ControlPad{
 
     this.nodes = [];
     this.fibers = [];
-    this.add_node(new THREE.Vector2(pi, pi/2 + 0.02));
+    this.add_node(new THREE.Vector2(0.2, 0.3));
   }
 
-  in_bounding_box(vec2){
+  in_bounding_box(vec2){ // mouse coordinates between -1 and 1
     if (vec2.x <= this.tr[0]/aspect && vec2.y <= this.tr[1]){
       return true;
     } else { return false; }
@@ -240,11 +240,14 @@ class ControlPad{
     }
   }
 
-  check_for_selection(ind){
-    raycaster.setFromCamera(mouseCoords, cameraUI);
-    let intersection = raycaster.intersectObject(this.nodes[ind].hitbox);
-    if (intersection.length){
-      this.selected = this.nodes[ind];
+  check_for_selections(){
+    for (var i = 0; i < controls.nodes.length; i++){
+      raycaster.setFromCamera(mouseCoords, cameraUI);
+      let intersection = raycaster.intersectObject(this.nodes[i].hitbox);
+      if (intersection.length){
+        this.selected = this.nodes[i];
+        break;
+      }
     }
   }
 
@@ -264,6 +267,16 @@ class ControlPad{
     fiber.index = ind;
     fiber.add_to(scene);
     this.fibers.push(fiber)
+  }
+
+  update_fibers(){
+    if (this.selected != null){
+      let ind = this.selected.index;
+      if (this.fibers[ind].needs_update){
+        let params = this.mouse_to_local(mouseCoords);
+        this.fibers[ind].updateFunc(hopf_fiber(params.x,params.y));
+      }
+    }
   }
 
 }
