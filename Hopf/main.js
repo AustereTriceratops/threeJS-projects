@@ -3,12 +3,12 @@ var height = window.innerHeight;
 var aspect = width / height;
 var raycaster = new THREE.Raycaster();
 const pi = Math.PI;
+var rotation = 0;
 
 // defined on runtime
 var scene, camera, renderer;
 var mouseX, mouseY, mouseCoords;
 var sceneUI, cameraUI, controls;
-var a, fiber, l1;
 
 
 // ===================== main =====================
@@ -18,10 +18,6 @@ function main(){
 
   controls = new ControlPad([-1*aspect, -1], [-1*aspect + 1.2, -0.4], {xrange: [0, 2*pi], yrange: [0, pi]});
   params = controls.node_to_local(controls.nodes[0]);
-
-  l1 = new Line([0,0], [0.7,0]);
-  l1.create_hitbox(0.05);
-  //l1.add_to(sceneUI);
 
   animate();
 }
@@ -37,15 +33,22 @@ function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
     let cost = Math.cos(alpha);
     let sint = Math.sin(alpha);
 
-    let q = [
+    /*let q = [
       -norm*(1+p.x)*sint,
       norm*(1+p.x)*cost,
       norm*(p.y*cost + p.z*sint),
       norm*(p.z*cost - p.y*sint)
+    ]; */  // fiber on 3-sphere
+
+    let q = [
+      norm*(1+p.x)*cost,
+      norm*(1+p.x)*sint,
+      norm*(-p.z*cost + p.y*sint),
+      norm*(p.y*cost + p.z*sint)
     ];   // fiber on 3-sphere
 
-    let sigma = 1.0/(1-q[0]);
-    let r = new THREE.Vector3(sigma*q[3], sigma*q[1], sigma*q[2]);
+    let sigma = 1.0/(1-q[2]);
+    let r = new THREE.Vector3(sigma*q[1], sigma*q[3], sigma*q[0]);
     //project q into 3D space
     return r
   }
@@ -64,6 +67,11 @@ function animate(){
       controls.fibers[ind].updateFunc(hopf_fiber(params.x,params.y));
     }
   }
+
+  rotation += 0.01;
+  camera.position.x = 6*Math.sin(rotation);
+  camera.position.z = 6*Math.cos(rotation);
+  camera.lookAt(0,0,0);
 
   renderer.autoClear = true;
   renderer.render(scene, camera);
