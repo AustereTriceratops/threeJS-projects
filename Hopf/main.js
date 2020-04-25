@@ -19,7 +19,9 @@ function main(){
   setup();
 
   controls = new ControlPad([-1*aspect, -1], [-1*aspect + 1.2, -0.4], {xrange: [0, 2*pi], yrange: [0, pi]});
-  params = controls.node_to_local(controls.nodes[0]);
+  controls.add_node(new THREE.Vector2(0.2, 0.3));
+  controls.add_node(new THREE.Vector2(0.7, 3.1));
+  controls.create_link(0, 1);
 
   animate();
 }
@@ -28,22 +30,31 @@ function main(){
 
 function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
   function func(alpha){
-    let p = new THREE.Vector3(Math.cos(a)*Math.sin(b), Math.sin(a)*Math.sin(b), Math.cos(b));
+    let p = new THREE.Vector3( Math.cos(a)*Math.cos(b), Math.sin(a)*Math.cos(b), Math.sin(b));
     // p is a point on 2-sphere
 
     let norm = 1/Math.pow(2*(1+p.x), 0.5);
     let cost = Math.cos(alpha);
     let sint = Math.sin(alpha);
 
-    let q = [
+    /*let q = [
       -norm*(1+p.x)*sint,
       norm*(1+p.x)*cost,
       norm*(p.y*cost + p.z*sint),
       norm*(p.z*cost - p.y*sint)
-    ];   // fiber on 3-sphere
+    ]; */  // fiber on 3-sphere
 
-    let sigma = 1.0/(1-q[2]);
-    let r = new THREE.Vector3(sigma*q[1], sigma*q[3], sigma*q[0]);
+    let q = [
+      norm*(1+p.x)*cost,
+      norm*(1+p.x)*sint,
+      norm*(-p.z*cost + p.y*sint),
+      norm*(p.y*cost + p.z*sint)
+    ];
+
+    /* let sigma = 1.0/(1-q[2]);
+    let r = new THREE.Vector3(sigma*q[1], sigma*q[3], sigma*q[0]); */
+    let sigma = 1.0/(1-q[0]);
+    let r = new THREE.Vector3(sigma*q[2], sigma*q[3], sigma*q[1]);
     //project q into 3D space
     return r
   }
@@ -55,7 +66,9 @@ function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
 
 
 function animate(){
+  controls.update_selected_node();
   controls.update_fibers();
+  controls.update_links();
 
   if (dragging){
     camera.position.x = 6*Math.sin(rotation);
@@ -78,6 +91,7 @@ function animate(){
 
 function setup(){
   document.addEventListener( 'load', setMouseCoords, false );
+  document.addEventListener( 'wheel', scroll, false );
   document.addEventListener( 'mousedown', mouseDown, false );
   document.addEventListener( 'mousemove', onMove, false );
   document.addEventListener( 'mouseup', mouseUp, false );
@@ -106,13 +120,16 @@ function windowResize() {
   renderer.setSize( width, height-2);
 }
 
+
 function setMouseCoords(event){
   mouseX = 2*event.clientX / width - 1;
   mouseY = 1 - 2*event.clientY / height;
   mouseCoords = new THREE.Vector2(mouseX, mouseY);
 }
 
+
 function mouseDown(event){
+  //console.log("down");
   controls.check_for_selections();
 
   if (!controls.in_bounding_box(mouseCoords)){
@@ -123,37 +140,51 @@ function mouseDown(event){
   rotationRef = rotation;
 }
 
+
 function onMove(event){
   setMouseCoords(event);
 
   if (controls.selected != null){
     if (controls.in_bounding_box(mouseCoords)){
-      controls.selected.update_position(mouseX*aspect,  mouseY, 0);
+      controls.prepare_selected_node();
+      controls.prepare_selected_links();
 
       let ind = controls.selected.index;
-      controls.fibers[ind].needs_update = true;  //updates on next render call
+      controls.node_fibers[ind].needs_update = true;  //updates on next render call
+    } else {
+      // compare current mousecoordinate with
     }
   }
 
-  for (var i = 0; i < controls.nodes.length; i++){
-    controls.check_for_highlight(i);
-  }
+  controls.check_for_highlights();
 
   if (dragging){
     let delta = mouseCoords.x - mouseRefCoords.x;
-    rotation = rotationRef + pi*delta;
+    rotation = rotationRef - pi*delta;
   }
-
 }
+
 
 function mouseUp(){
   controls.selected = null;
   dragging = false;
 }
 
+
 function doubleClick(event){
   let local_coords = controls.mouse_to_local(mouseCoords);
   controls.add_node(local_coords);
+
+  controls.check_for_selections();
+  if (controls.selected != null){
+    let ind = controls.nodes.length - 1;
+    controls.create_link(controls.selected.index, ind);
+    controls.selected = controls.nodes[ind];
+  }
+}
+
+function scroll(event){
+  console.log(event.deltaY);
 }
 
 //

@@ -2,8 +2,10 @@
 class Point{
   constructor(x, y, {color=0x41b827, size=0.015, interactive=false}={}){
     if (!color){color = 0x41b827}
+    this.needs_update = false;
     this.x = x;
     this.y = y;
+    this.xy = [x, y];
     this.size = size
     this.color = color;
     this.interactive = interactive;
@@ -33,10 +35,12 @@ class Point{
   update_position(x, y){
     this.x = x;
     this.y = y;
+    this.xy = [x, y];
     this.circle.position.set(this.x, this.y, 0);
     if (this.interactive){
       this.hitbox.position.set(this.x, this.y, 0);
     }
+    this.needs_update = false;
   }
 
   create_hitbox(epsilon){ // interactivity
@@ -60,10 +64,8 @@ class Point{
 class Line{
   constructor([x1, y1], [x2, y2], {color=0x000000}={}){
     this.color = color;
-    this.p1 = new THREE.Vector3(x1, y1, 0);
-    this.p2 = new THREE.Vector3(x2, y2, 0);
-    this.points = [this.p1, this.p2];
-
+    this.needs_update = false;
+    this.setPoints([x1, y1], [x2, y2]);
     this.createGeometry();
   }
 
@@ -112,6 +114,33 @@ class Line{
     this.hitbox = new THREE.Mesh(fill_geom, hitbox_mat);
     sceneUI.add(this.hitbox);
   }
+
+  setPoints(p1, p2){
+    this.p1 = new THREE.Vector3(p1[0], p1[1], 0);
+    this.p2 = new THREE.Vector3(p2[0], p2[1], 0);
+    this.points = [this.p1, this.p2];
+  }
+
+  updateGeometry(){
+    this.line.geometry.setFromPoints(this.points);
+    this.needs_update = false;
+  }
+
+  find_intermediate_points(n){
+    this.intermediate_points = [];
+    let x_diff = this.p2.x - this.p1.x;
+    let y_diff = this.p2.y - this.p1.y;
+    for (var i = 0; i < n; i++){
+      let x = this.p1.x + (i+1)*x_diff/(n+1);
+      let y = this.p1.y + (i+1)*y_diff/(n+1);
+      this.intermediate_points.push(new THREE.Vector3(x, y, 0));
+    }
+  }
+
+}
+
+class DividedLine extends Line{
+
 }
 
 
@@ -181,6 +210,7 @@ class SolidRectangle{
 class ControlPad{
   constructor(bottom_left, top_right, {xrange=[0,1], yrange=[0,1]}={}){
     this.selected = null;
+    this.linkMode = false;
     this.xrange = xrange;
     this.yrange = yrange;
     this.dx = this.xrange[1] - this.xrange[0];
@@ -196,12 +226,15 @@ class ControlPad{
     this.backdrop.add_to(sceneUI);
 
     this.nodes = [];
-    this.fibers = [];
-    this.add_node(new THREE.Vector2(0.2, 0.3));
+    this.node_fibers = [];
+    this.links = [];
   }
 
   in_bounding_box(vec2){ // mouse coordinates between -1 and 1
-    if (vec2.x <= this.tr[0]/aspect && vec2.y <= this.tr[1]){
+    if (
+      vec2.x <= this.tr[0]/aspect && vec2.y <= this.tr[1] &&
+      vec2.x >= this.bl[0]/aspect && vec2.y >= this.bl[1]
+    ){
       return true;
     } else { return false; }
   }
@@ -216,7 +249,7 @@ class ControlPad{
     return new THREE.Vector2(x, y);
   }
 
-  node_to_local(node){
+  node_to_local(node){ // vec2, vec3, point
     let loc = new THREE.Vector2(node.x, node.y);
     let x = this.xrange[0] + this.dx*(loc.x - this.bl[0])/this.width;
     let y = this.yrange[0] + this.dy*(loc.y - this.bl[1])/this.height;
@@ -235,8 +268,42 @@ class ControlPad{
       let ind = this.nodes.length;
       this.nodes.push(new Point(pos.x, pos.y, {interactive: true, color:0xc265b5}));
       this.nodes[ind].index = ind;
+      this.nodes[ind].link_indices = [];
       this.nodes[ind].add_to(sceneUI);
       this.create_fiber(ind);
+    }
+  }
+
+  prepare_selected_node(){
+    this.selected.needs_update = true;
+  }
+
+  update_selected_node(){
+    if (this.selected != null && this.selected.needs_update){
+      if (this.in_bounding_box(mouseCoords)){
+        this.selected.update_position(mouseX*aspect,  mouseY, 0);
+      } else{
+        /*console.log(mouseCoords, mouseRefCoords);
+        let delta_x = (mouseCoords.x - mouseRefCoords.x);
+        let delta_y = mouseCoords.y - mouseRefCoords.y;
+        let slope = delta_y/delta_x;
+        //y = (x - mouseRefCoords.x)*slope + mouseRefCoords.y
+        //x = (y - mouseRefCoords.y)/slope + mouseRefCoords.x
+        let p_top, p_bottom, p_left, p_right;
+        //p_left = [this.bl[0], (this.bl[0] - aspect*mouseRefCoords.x)*slope + mouseRefCoords.y];
+        p_right = [this.tr[0], (this.tr[0] - aspect*mouseCoords.x)*slope + mouseRefCoords.y];
+        p_top = [(this.tr[1] - mouseRefCoords.y)/slope + aspect*mouseCoords.x, this.tr[1]];
+        //p_bottom = [(this.bl[1] - mouseRefCoords.y)/slope + aspect*mouseRefCoords.x, this.bl[1]];
+        //let points = [p_left, p_right, p_top, p_bottom];
+
+        //console.log(p_top, p_right);
+
+        if (p_top[0] < p_right[0]){
+          this.selected.update_position(p_top[0],  p_top[1], 0);
+        } else {
+          this.selected.update_position(p_right[0],  p_right[1], 0);
+        } */
+      }
     }
   }
 
@@ -251,13 +318,15 @@ class ControlPad{
     }
   }
 
-  check_for_highlight(ind){
-    raycaster.setFromCamera(mouseCoords, cameraUI);
-    let intersection = raycaster.intersectObject(this.nodes[ind].hitbox);
-    if (intersection.length){
-      this.nodes[ind].highlight();
-    } else {
-      this.nodes[ind].unhighlight();
+  check_for_highlights(){
+    for (var i = 0; i < this.nodes.length; i++){
+      raycaster.setFromCamera(mouseCoords, cameraUI);
+      let intersection = raycaster.intersectObject(this.nodes[i].hitbox);
+      if (intersection.length){
+        this.nodes[i].highlight();
+      } else {
+        this.nodes[i].unhighlight();
+      }
     }
   }
 
@@ -266,24 +335,82 @@ class ControlPad{
     let fiber = new ParametricCurve(hopf_fiber(params.x, params.y), [0, 2*pi]);
     fiber.index = ind;
     fiber.add_to(scene);
-    this.fibers.push(fiber)
+    this.node_fibers.push(fiber)
   }
 
   update_fibers(){
     if (this.selected != null){
       let ind = this.selected.index;
-      if (this.fibers[ind].needs_update){
+      if (this.node_fibers[ind].needs_update){ //is this condition redundant?
         let params = this.mouse_to_local(mouseCoords);
-        this.fibers[ind].updateFunc(hopf_fiber(params.x,params.y));
+        this.node_fibers[ind].updateFunc(hopf_fiber(params.x,params.y));
       }
     }
   }
 
+  create_link(i, j){
+    let node_i = this.nodes[i];
+    let node_j = this.nodes[j];
+    let l = new Line(node_i.xy, node_j.xy, {color:0xc265b5});
+    l.num_intermediates = 8;
+    l.find_intermediate_points(l.num_intermediates);
+    l.fibers = [];
+    for (var m = 0; m < l.intermediate_points.length; m++){
+      let p = l.intermediate_points[m];
+      let params = this.node_to_local(p);
+      let fiber = new ParametricCurve(hopf_fiber(params.x, params.y), [0, 2*pi]);
+      fiber.index = m;
+      fiber.add_to(scene);
+      l.fibers.push(fiber);
+    }
+    l.from = i;
+    l.to = j;
+    this.links.push(l);
+
+    let ind = this.links.length - 1;
+    this.links[ind].index = ind;
+    this.links[ind].add_to(sceneUI);
+
+    this.nodes[i].link_indices.push(ind);
+    this.nodes[j].link_indices.push(ind);
+  }
+
+  prepare_selected_links(){
+    let inds = this.selected.link_indices; //links that need to be updated
+
+    for (var i = 0; i < inds.length; i++){
+      this.links[inds[i]].needs_update = true;
+    }
+  }
+
+  update_links(){
+    if (this.selected != null){
+      let inds = this.selected.link_indices;
+
+      for (var i = 0; i < inds.length; i++){
+        if (this.links[inds[i]].needs_update){ // is this redundant?
+          let node_inds = [this.links[inds[i]].from, this.links[inds[i]].to];
+          let p1 = this.nodes[node_inds[0]];
+          let p2 = this.nodes[node_inds[1]];
+          this.links[inds[i]].setPoints(p1.xy, p2.xy);
+          this.links[inds[i]].updateGeometry();
+          let l = this.links[inds[i]]
+          this.links[inds[i]].find_intermediate_points(l.num_intermediates);
+
+          for (var i = 0; i < l.intermediate_points.length; i++){
+            let p = l.intermediate_points[i];
+            let params = this.node_to_local(p);
+            l.fibers[i].updateFunc(hopf_fiber(params.x, params.y));
+          }
+        }
+      }
+    }
+  }
 }
 
 
 class ParametricCurve{ // curve in 3D space
-  constructor(func, range, res=60){
+  constructor(func, range, res=100){
     this.func = func;
     this.range = range;
     this.res = res;
@@ -322,5 +449,9 @@ class ParametricCurve{ // curve in 3D space
 
   add_to(some_scene){
     some_scene.add(this.curve);
+  }
+
+  subdivide(n){
+
   }
 }
