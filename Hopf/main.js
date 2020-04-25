@@ -20,8 +20,8 @@ function main(){
   setup();
 
   controls = new ControlPad([-1*aspect, -1], [-1*aspect + 1.2, -0.4], {xrange: [-pi, pi], yrange: [0, pi]});
-  controls.add_node(new THREE.Vector2(-0.7, 2.7));
-  controls.add_node(new THREE.Vector2(0.7, 2.7));
+  controls.add_node(new THREE.Vector2(-2.4, 0.9));
+  controls.add_node(new THREE.Vector2(0.5, 1.2));
   controls.create_link(0, 1);
 
   animate();
@@ -31,7 +31,7 @@ function main(){
 
 function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
   function func(alpha){
-    let p = new THREE.Vector3( Math.sin(b), Math.sin(a)*Math.cos(b), Math.cos(a)*Math.cos(b),);
+    let p = new THREE.Vector3( Math.cos(b), Math.sin(a)*Math.sin(b), Math.cos(a)*Math.sin(b),);
     // p is a point on 2-sphere
 
     let norm = 1/Math.pow(2*(1+p.x), 0.5);

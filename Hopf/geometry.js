@@ -149,7 +149,7 @@ class Line{
 
   highlight(){
     this.highlighted = true;
-    this.line.material.opacity = 0.6;
+    this.line.material.opacity = 0.9;
   }
 
   unhighlight(){
@@ -228,9 +228,10 @@ class SolidRectangle{
 
 
 class ControlPad{
-  constructor(bottom_left, top_right, {xrange=[0,1], yrange=[0,1]}={}){
+  constructor(bottom_left, top_right, {xrange=[0,1], yrange=[0,1], node_color=0x6da5bd}={}){
     this.selected = null;
     this.linkMode = false;
+    this.node_color = node_color;
     this.xrange = xrange;
     this.yrange = yrange;
     this.dx = this.xrange[1] - this.xrange[0];
@@ -241,7 +242,7 @@ class ControlPad{
     this.height = this.tr[1] - this.bl[1];
     this.adjust_for_outline();
 
-    this.backdrop = new Rect(this.bl, this.tr, {fill_color:0xff918a, opacity:0.4, outline:false});
+    this.backdrop = new Rect(this.bl, this.tr, {fill_color:0x574c0a, opacity:0.25, outline:false});
     this.backdrop.fill.translateZ(0.1);
     this.backdrop.add_to(sceneUI);
 
@@ -286,7 +287,7 @@ class ControlPad{
     if (loc.x < this.xrange[1] && loc.y < this.yrange[1] && loc.x > this.xrange[0] && loc.y > this.yrange[0] ){
       let pos = this.local_to_world(loc);
       let ind = this.nodes.length;
-      this.nodes.push(new Point(pos.x, pos.y, {interactive: true, color:0xc265b5}));
+      this.nodes.push(new Point(pos.x, pos.y, {interactive: true, color:this.node_color}));
       this.nodes[ind].index = ind;
       this.nodes[ind].link_indices = [];
       this.nodes[ind].add_to(sceneUI);
@@ -378,12 +379,12 @@ class ControlPad{
     }
   }
 
-  create_link(i, j){
+  create_link(i, j){  //clean up
     this.linkMode = true;
     let node_i = this.nodes[i];
     let node_j = this.nodes[j];
-    let l = new Line(node_i.xy, node_j.xy, {color:0xc265b5, interactive:true});
-    l.num_intermediates = 8;
+    let l = new Line(node_i.xy, node_j.xy, {color:this.node_color, interactive:true});
+    l.num_intermediates = 10;
     l.find_intermediate_points(l.num_intermediates);
     l.fibers = [];
     for (var m = 0; m < l.intermediate_points.length; m++){
