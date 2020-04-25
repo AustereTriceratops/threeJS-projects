@@ -1,8 +1,9 @@
 // =================== Classes ===================
 class Point{
-  constructor(x, y, {color=0x41b827, size=0.015, interactive=false}={}){
+  constructor(x, y, {color=0x41b827, size=0.015, interactive=false, epsilon=0.03}={}){
     if (!color){color = 0x41b827}
     this.needs_update = false;
+    this.epsilon = epsilon;
     this.x = x;
     this.y = y;
     this.xy = [x, y];
@@ -11,7 +12,7 @@ class Point{
     this.interactive = interactive;
     this.highlighted = false;
     if (interactive){
-      this.create_hitbox(0.03);
+      this.create_hitbox(this.epsilon);
     }
 
     this.circle = this.createGeometry();
@@ -62,11 +63,17 @@ class Point{
 
 
 class Line{
-  constructor([x1, y1], [x2, y2], {color=0x000000}={}){
+  constructor([x1, y1], [x2, y2], {color=0x000000, epsilon=0.02, interactive=false}={}){
     this.color = color;
+    this.epsilon = epsilon;
+    this.highlighted = false;
     this.needs_update = false;
+    this.interactive = interactive;
     this.setPoints([x1, y1], [x2, y2]);
     this.createGeometry();
+    if (this.interactive){
+      this.create_hitbox();
+    }
   }
 
   createGeometry(){
@@ -79,21 +86,21 @@ class Line{
     some_scene.add(this.line);
   }
 
-  create_hitbox(epsilon){
+  create_hitbox(){
     let x_diff = this.p2.x - this.p1.x;
     let y_diff = this.p2.y - this.p1.y;
-    let dx, dy
+    let dx, dy;
 
     if (x_diff == 0){
-      dx = epsilon;
+      dx = this.epsilon;
       dy = 0;
     } else if (y_diff == 0){
       dx = 0;
-      dy = epsilon;
+      dy = this.epsilon;
     } else {
       let line_slope = (y_diff)/(x_diff);
       let s = -1.0/line_slope;
-      let alpha = Math.pow(epsilon, 2)/(1 + Math.pow(s, 2));
+      let alpha = Math.pow(this.epsilon, 2)/(1 + Math.pow(s, 2));
       dx = Math.pow(alpha, 0.5)
       dy = s*dx
     }
@@ -123,6 +130,9 @@ class Line{
 
   updateGeometry(){
     this.line.geometry.setFromPoints(this.points);
+    if (this.interactive){
+      this.create_hitbox();
+    }
     this.needs_update = false;
   }
 
@@ -135,6 +145,16 @@ class Line{
       let y = this.p1.y + (i+1)*y_diff/(n+1);
       this.intermediate_points.push(new THREE.Vector3(x, y, 0));
     }
+  }
+
+  highlight(){
+    this.highlighted = true;
+    this.line.material.opacity = 0.6;
+  }
+
+  unhighlight(){
+    this.highlighted = false;
+    this.line.material.opacity = 1;
   }
 
 }
@@ -302,7 +322,7 @@ class ControlPad{
           this.selected.update_position(p_top[0],  p_top[1], 0);
         } else {
           this.selected.update_position(p_right[0],  p_right[1], 0);
-        } */
+        }*/
       }
     }
   }
@@ -328,6 +348,16 @@ class ControlPad{
         this.nodes[i].unhighlight();
       }
     }
+
+    for (var i = 0; i < this.links.length; i++){
+      raycaster.setFromCamera(mouseCoords, cameraUI);
+      let intersection = raycaster.intersectObject(this.links[i].hitbox);
+      if (intersection.length && !mouse_down){
+        this.links[i].highlight();
+      } else {
+        this.links[i].unhighlight();
+      }
+    }
   }
 
   create_fiber(ind){ //maybe nodes should cache their local coordinates
@@ -349,9 +379,10 @@ class ControlPad{
   }
 
   create_link(i, j){
+    this.linkMode = true;
     let node_i = this.nodes[i];
     let node_j = this.nodes[j];
-    let l = new Line(node_i.xy, node_j.xy, {color:0xc265b5});
+    let l = new Line(node_i.xy, node_j.xy, {color:0xc265b5, interactive:true});
     l.num_intermediates = 8;
     l.find_intermediate_points(l.num_intermediates);
     l.fibers = [];
@@ -406,11 +437,29 @@ class ControlPad{
       }
     }
   }
+
+  change_link_midpoints(ind, amount){
+    for (var m = 0; m < this.links[ind].fibers.length; m++){
+      scene.remove(this.links[ind].fibers[m].curve);
+    }
+
+    this.links[ind].num_intermediates += amount;
+    this.links[ind].find_intermediate_points(this.links[ind].num_intermediates);
+    this.links[ind].fibers = [];
+    for (var m = 0; m < this.links[ind].intermediate_points.length; m++){
+      let p = this.links[ind].intermediate_points[m];
+      let params = this.node_to_local(p);
+      let fiber = new ParametricCurve(hopf_fiber(params.x, params.y), [0, 2*pi]);
+      fiber.index = m;
+      fiber.add_to(scene);
+      this.links[ind].fibers.push(fiber);
+    }
+  }
 }
 
 
 class ParametricCurve{ // curve in 3D space
-  constructor(func, range, res=100){
+  constructor(func, range, res=140){
     this.func = func;
     this.range = range;
     this.res = res;

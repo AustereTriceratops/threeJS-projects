@@ -6,6 +6,7 @@ const pi = Math.PI;
 var rotation = 0;
 var rotationRef = 0;
 var dragging = false;
+var mouse_down = false;
 
 // defined on runtime
 var scene, camera, renderer;
@@ -18,9 +19,9 @@ var mouseRefCoords;
 function main(){
   setup();
 
-  controls = new ControlPad([-1*aspect, -1], [-1*aspect + 1.2, -0.4], {xrange: [0, 2*pi], yrange: [0, pi]});
-  controls.add_node(new THREE.Vector2(0.2, 0.3));
-  controls.add_node(new THREE.Vector2(0.7, 3.1));
+  controls = new ControlPad([-1*aspect, -1], [-1*aspect + 1.2, -0.4], {xrange: [-pi, pi], yrange: [0, pi]});
+  controls.add_node(new THREE.Vector2(-0.7, 2.7));
+  controls.add_node(new THREE.Vector2(0.7, 2.7));
   controls.create_link(0, 1);
 
   animate();
@@ -30,31 +31,22 @@ function main(){
 
 function hopf_fiber(a, b){ // a in [0, 2*pi] b in [0, pi]
   function func(alpha){
-    let p = new THREE.Vector3( Math.cos(a)*Math.cos(b), Math.sin(a)*Math.cos(b), Math.sin(b));
+    let p = new THREE.Vector3( Math.sin(b), Math.sin(a)*Math.cos(b), Math.cos(a)*Math.cos(b),);
     // p is a point on 2-sphere
 
     let norm = 1/Math.pow(2*(1+p.x), 0.5);
     let cost = Math.cos(alpha);
     let sint = Math.sin(alpha);
 
-    /*let q = [
+    let q = [
       -norm*(1+p.x)*sint,
       norm*(1+p.x)*cost,
       norm*(p.y*cost + p.z*sint),
       norm*(p.z*cost - p.y*sint)
-    ]; */  // fiber on 3-sphere
+    ];  // fiber on 3-sphere
 
-    let q = [
-      norm*(1+p.x)*cost,
-      norm*(1+p.x)*sint,
-      norm*(-p.z*cost + p.y*sint),
-      norm*(p.y*cost + p.z*sint)
-    ];
-
-    /* let sigma = 1.0/(1-q[2]);
-    let r = new THREE.Vector3(sigma*q[1], sigma*q[3], sigma*q[0]); */
     let sigma = 1.0/(1-q[0]);
-    let r = new THREE.Vector3(sigma*q[2], sigma*q[3], sigma*q[1]);
+    let r = new THREE.Vector3(sigma*q[2], sigma*q[1], sigma*q[3]);
     //project q into 3D space
     return r
   }
@@ -71,8 +63,8 @@ function animate(){
   controls.update_links();
 
   if (dragging){
-    camera.position.x = 6*Math.sin(rotation);
-    camera.position.z = 6*Math.cos(rotation);
+    camera.position.x = camera.distance*Math.sin(rotation);
+    camera.position.z = camera.distance*Math.cos(rotation);
     camera.lookAt(0,0,0);
   }
 
@@ -98,7 +90,8 @@ function setup(){
   document.addEventListener( 'dblclick', doubleClick, false );
 
   camera = new THREE.PerspectiveCamera(45, aspect);
-  camera.position.set(0, 0, 6);
+  camera.distance = 6
+  camera.position.set(0, 0, camera.distance);
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf7f6ed);
 
@@ -130,6 +123,7 @@ function setMouseCoords(event){
 
 function mouseDown(event){
   //console.log("down");
+  mouse_down = true;
   controls.check_for_selections();
 
   if (!controls.in_bounding_box(mouseCoords)){
@@ -166,8 +160,13 @@ function onMove(event){
 
 
 function mouseUp(){
+  mouse_down = false;
   controls.selected = null;
   dragging = false;
+
+  if (controls.linkMode){
+    controls.linkMode = false;
+  }
 }
 
 
@@ -184,7 +183,38 @@ function doubleClick(event){
 }
 
 function scroll(event){
-  console.log(event.deltaY);
+  if (!controls.in_bounding_box(mouseCoords)){
+    if (event.deltaY > 0){
+      camera.distance += 0.1;
+      camera.translateZ(0.1);
+    } else {
+      camera.distance -= 0.1;
+      camera.translateZ(-0.1);
+    }
+  }
+
+  if (controls.linkMode){
+    let ind = controls.links.length -1;
+
+    if (event.deltaY > 0){
+      controls.change_link_midpoints(ind, -1);
+    } else {
+      controls.change_link_midpoints(ind, 1);
+    }
+  }
+
+  for (var i = 0; i < controls.links.length; i++){
+    raycaster.setFromCamera(mouseCoords, cameraUI);
+    let intersection = raycaster.intersectObject(controls.links[i].hitbox);
+
+    if (intersection.length && !mouse_down){
+      if (event.deltaY > 0){
+        controls.change_link_midpoints(i, -1);
+      } else {
+        controls.change_link_midpoints(i, 1);
+      }
+    }
+  }
 }
 
 //
