@@ -5,6 +5,8 @@ var raycaster = new THREE.Raycaster();
 const pi = Math.PI;
 var rotation = 0;
 var rotationRef = 0;
+var verticalRotation = 0;
+var verticalRotationRef = 0;
 var dragging = false;
 var mouse_down = false;
 
@@ -63,8 +65,9 @@ function animate(){
   controls.update_links();
 
   if (dragging){
-    camera.position.x = camera.distance*Math.sin(rotation);
-    camera.position.z = camera.distance*Math.cos(rotation);
+    camera.position.x = camera.distance*Math.sin(rotation)*Math.cos(verticalRotation);
+    camera.position.z = camera.distance*Math.cos(rotation)*Math.cos(verticalRotation);
+    camera.position.y = camera.distance*Math.sin(verticalRotation);
     camera.lookAt(0,0,0);
   }
 
@@ -90,7 +93,7 @@ function setup(){
   document.addEventListener( 'dblclick', doubleClick, false );
 
   camera = new THREE.PerspectiveCamera(45, aspect);
-  camera.distance = 6
+  camera.distance = 6;
   camera.position.set(0, 0, camera.distance);
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0xf7f6ed);
@@ -132,6 +135,7 @@ function mouseDown(event){
 
   mouseRefCoords = mouseCoords.clone();
   rotationRef = rotation;
+  verticalRotationRef = verticalRotation;
 }
 
 
@@ -154,7 +158,10 @@ function onMove(event){
 
   if (dragging){
     let delta = mouseCoords.x - mouseRefCoords.x;
-    rotation = rotationRef - pi*delta;
+    let verticalDelta = mouseCoords.y - mouseRefCoords.y;
+    rotation = rotationRef - 1.2*pi*delta;
+    verticalRotation = verticalRotationRef - 0.3*pi*verticalDelta;
+    verticalRotation = Math.max(Math.min(verticalRotation, 0.5), -0.5);
   }
 }
 
@@ -178,6 +185,7 @@ function doubleClick(event){
   if (controls.selected != null){
     let ind = controls.nodes.length - 1;
     controls.create_link(controls.selected.index, ind);
+    controls.linkMode = true;
     controls.selected = controls.nodes[ind];
   }
 }
@@ -191,6 +199,8 @@ function scroll(event){
       camera.distance -= 0.1;
       camera.translateZ(-0.1);
     }
+
+
   }
 
   if (controls.linkMode){
@@ -207,7 +217,7 @@ function scroll(event){
     raycaster.setFromCamera(mouseCoords, cameraUI);
     let intersection = raycaster.intersectObject(controls.links[i].hitbox);
 
-    if (intersection.length && !mouse_down){
+    if (intersection.length > 0 && !mouse_down){
       if (event.deltaY > 0){
         controls.change_link_midpoints(i, -1);
       } else {

@@ -380,7 +380,6 @@ class ControlPad{
   }
 
   create_link(i, j){  //clean up
-    this.linkMode = true;
     let node_i = this.nodes[i];
     let node_j = this.nodes[j];
     let l = new Line(node_i.xy, node_j.xy, {color:this.node_color, interactive:true});
