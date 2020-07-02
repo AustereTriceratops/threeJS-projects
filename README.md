@@ -22,3 +22,5 @@ Click [here](https://austeretriceratops.github.io/EscapeFractal/) to view.
 
 The Hopf fibration is an unusual mapping of the (4-dimensional) hypersphere onto a sphere in which every point in the latter corresponds to a uniquely defined "fiber" in the former. This visualisation is based on [these notes by Niles Johnson](https://nilesjohnson.net/hopf-articles/Lyons_Elem-intro-Hopf-fibration.pdf).
 
+Click [here](https://austeretriceratops.github.io/Hopf/) to view.
+
