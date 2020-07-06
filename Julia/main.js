@@ -11,6 +11,7 @@ var res = new THREE.Vector2(width, height);
 var offset = new THREE.Vector2(-1.5*aspect, -1.5);
 var mouse_down = false;
 var need_update = false;
+var need_scroll_update = false;
 
 
 init();
@@ -41,8 +42,13 @@ function init() {
 
 function animate(){
   if (need_update){
-    updateUniforms();
+    uniforms["c"]["value"] = mouseCoords;
     need_update = false;
+  }
+  if (need_scroll_update){
+    uniforms["zoom"]["value"] = zoom;
+    uniforms["offset"]["value"] = offset;
+    need_scroll_update = false;
   }
 
   renderer.render(scene, camera);
@@ -152,13 +158,9 @@ function scroll(event){
   let y_ = 1-event.clientY / height;
   offset = offset.add(new THREE.Vector2(-x_*space*aspect, -y_*space));
 
-  uniforms['zoom']['value'] = zoom;
-  uniforms['offset']['value'] = offset;
+  need_scroll_update = true;
 }
 
-function updateUniforms(){
-  uniforms['c']['value'] = mouseCoords;
-}
 
 function setMouseCoords(event){  //
   mouseX = zoom*aspect*event.clientX / width + offset.x;
