@@ -24,3 +24,11 @@ The Hopf fibration is an unusual mapping of the (4-dimensional) hypersphere onto
 
 Click [here](https://austeretriceratops.github.io/Hopf/) to view.
 
+
+## The Julia Set
+
+![](https://i.imgur.com/LEmNqGT.jpg?1)
+
+A simple click-and-drag viewer of the Julia set written in three.js.
+
+Click [here](https://austeretriceratops.github.io/Julia/) to view.
