@@ -116,8 +116,6 @@ class Parabola{
     this.vec = parabolaVec(this.focus, this.directix);
     this.func = this.funcFromVec(this.vec);
     this.bound = bound(this.vec);
-    this.low_intersection = null;
-    this.high_intersection=  null;
   }
 
   funcFromVec(vec){
@@ -131,12 +129,11 @@ class Parabola{
 
 
 class Intersection{ // convenient datatype
-  constructor(point, indices, parity){
+  constructor(point, indices){
     this.coord = point;
     this.x = point[0];
     this.y = point[1];
     this.indices = indices;
-    this.upper = parity;
   }
 }
 
@@ -152,6 +149,7 @@ function parabolaFunc(focus, directix){  // focus is float[2]
   return parabola;
 }
 
+
 function parabolaVec(focus, directix){  // returns dictionary for r*(x-a)^2 + s
   let r = 1/(2.0*(focus[1] - directix));
   let s =  (focus[1] + directix)/2.0;
@@ -159,6 +157,7 @@ function parabolaVec(focus, directix){  // returns dictionary for r*(x-a)^2 + s
 
   return {"r": r, "s": s, "a": a};
 }
+
 
 function bound(pvec){ // takes parabola vector
   let y1 =pvec['a'] - Math.pow(-pvec['s']/pvec['r'], 0.5);
@@ -195,6 +194,41 @@ function nearest_points(list_of_intersections, pivot){
     r.push(high);
   }
   return r;
+}
+
+function equal_arrays(a, b){
+  if (a.length != b.length){
+    return false;
+  }
+
+  p = a.slice().sort();
+  q = b.slice().sort();
+
+  for (var i = 0; i < p.length; i++){
+    if (p[i] != q[i]){
+      return false;
+    }
+  }
+  return true;
+}
+
+function remove_duplicate_arrays(arr){
+  result = [];
+  for (var i = 0; i < arr.length; i++){
+    if (!in_array(arr[i], result)){
+      result.push(arr[i]);
+    }
+  }
+  return result;
+}
+
+function in_array(a, b){ // bool: a in b
+  for(var i = 0; i < b.length; i++){
+    if (equal_arrays(a, b[i])){
+      return true;
+    }
+  }
+  return false;
 }
 
 function compare_pairs(old_p, new_p){
@@ -253,8 +287,8 @@ function find_intersections(parabolae, active_indices, k){
 
     // wall intersections count
     let bound = parabolae[i].bound;
-    local_intersections.push(new Intersection([0, bound[0]], [i, "l"], [false, null]));
-    local_intersections.push(new Intersection([0, bound[1]], [i, "l"], [true, null]));
+    local_intersections.push(new Intersection([0, bound[0]], [i, "l"]));
+    local_intersections.push(new Intersection([0, bound[1]], [i, "l"]));
 
     let this_func = parabolae[i].func;
     let pvec2 = parabolae[i].vec;
@@ -278,16 +312,11 @@ function find_intersections(parabolae, active_indices, k){
       let x1 = this_func(y1);
       let x2 = this_func(y2);
 
-      let i_parity_1 = (y1 > parabolae[i].focus[0]) ? true : false;
-      let i_parity_2 = (y2 > parabolae[i].focus[0]) ? true : false;
-      let j_parity_1 = (y1 > parabolae[j].focus[0]) ? true : false;
-      let j_parity_2 = (y2 > parabolae[i].focus[0]) ? true : false;
-
       if (x1 > 0){ // don't bother with intersections offscreen
-        local_intersections.push(new Intersection([x1, y1], [i, j], [i_parity_1, j_parity_1]));
+        local_intersections.push(new Intersection([x1, y1], [i, j]));
       }
       if (x2 > 0){
-        local_intersections.push(new Intersection([x2, y2], [i, j], [i_parity_2, j_parity_2]));
+        local_intersections.push(new Intersection([x2, y2], [i, j]));
       }
     }
     // only two intersections matter, the ones closest to parabola_i's focus
@@ -305,7 +334,6 @@ function find_intersections(parabolae, active_indices, k){
 
     intersections = frontline.concat(paired_intersections);
   }
-
   return intersections;
 }
 
@@ -320,6 +348,39 @@ function active_indices_from_pairs(pairs){
     }
   }
   return active_indices;
+}
+
+function flatten(a){  // a is array of arrays
+  let flat = [];
+
+  for (var i = 0; i < a.length; i++){
+    for (var j = 0; j < a[i].length; j++){
+      flat.push(a[i][j])
+    }
+  }
+  return flat;
+}
+
+function find_duplicates(a){
+  a_ = [];
+  for (var i = 0; i < a.length; i++){
+    if (a_.includes(a[i])){
+      return a[i];
+    } else {
+      a_.push(a[i]);
+    }
+  }
+  return null;
+}
+
+function remove_duplicates(a){
+  result = [];
+  for (var i = 0; i < a.length; i++){
+    if (!result.includes(a[i])){
+      result.push(a[i]);
+    }
+  }
+  return result;
 }
 
 function create_parabolae(points, active_indices, directix){
@@ -362,6 +423,17 @@ function filter_intersections(intersections, pair){
     }
   }
   return r
+}
+
+function a_exclude_b(a,b){ // a is a set, b is an element
+  let result = [];
+
+  for (var i = 0; i < a.length; i++){
+    if (a[i] != b){
+      result.push(a[i]);
+    }
+  }
+  return result;
 }
 
 function resolve_trisection(points, trisecting_indices, passing_indices, k, alpha = 0.001){
@@ -455,7 +527,6 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
         let p_0 = create_parabolae(points, passing, points[k].x); //may be 2 or 3 elements
         let p_1 = create_parabolae(points, passing, points[k].x - 0.005);
 
-        // rewrite so that intersections are filtered by parity
         intersections_0 = find_intersections(p_0, trisecting_indices, k);
         intersections_0.sort((a, b) => (a.y > b.y) ? 1 : -1);
         pairs_0 = intersections_0[1].indices;
@@ -479,10 +550,6 @@ function fortune(set_of_points){ // return set of lines indicating vornoi bounda
         new Point(0, vertex_y, color=0x307fa6); // vornoi vertex on left edge
 
       } else {
-        if (passing.includes("l")){
-          console.log("edge trisection");
-        }
-
         let [vertex_x, vertex_y] = resolve_trisection(points, trisecting_indices, passing, k, alpha);
         console.log(vertex_x, vertex_y);
 
