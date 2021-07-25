@@ -12,6 +12,8 @@ var cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
 var cameraPos = new THREE.Vector3(0.0, 0.0, 1.0);
 
 
+//TODO: break this up into other files
+// & figure out how importing works in this language
 // Main ================================================
 function main()
 {
@@ -29,8 +31,6 @@ function main()
 
   // DEBUGGING ONLY ==================
   var v = new Quaternion(1, 0, 0, 0);
-  console.log(v.x);
-  console.log(v.w);
   
   // ANIMATE ==================
   animate();
@@ -89,32 +89,45 @@ function handleInput(event)
   }
   if (event.keyCode == 65)
   {
-    console.log("A pressed, move forward on agent's Y axis");
+    var cameraXDirection = cameraX.clone().multiplyScalar(0.01)
+    cameraPos.sub(cameraXDirection);
+
+    uniforms['cameraPos']['value'] = cameraPos;
   }
   if (event.keyCode == 83)
   {
     var cameraYDirection = cameraY.clone().multiplyScalar(0.01)
     cameraPos.sub(cameraYDirection);
 
-    // TODO: move uniform updates to another function called during animate()
     uniforms['cameraPos']['value'] = cameraPos;
   }
   if (event.keyCode == 68)
   {
-    console.log("D pressed, move forward on agent's Y axis");
+    var cameraXDirection = cameraX.clone().multiplyScalar(0.01)
+    cameraPos.add(cameraXDirection);
+
+    uniforms['cameraPos']['value'] = cameraPos;
   }
   if (event.keyCode == 32)
   {
-    console.log("SPACE pressed, move forward on agent's Y axis");
+    var cameraZDirection = cameraZ.clone().multiplyScalar(0.01)
+    cameraPos.add(cameraZDirection);
+
+    uniforms['cameraPos']['value'] = cameraPos;
   }
   if (event.keyCode == 16)
   {
-    console.log("SHIFT pressed, move forward on agent's Y axis");
+    var cameraZDirection = cameraZ.clone().multiplyScalar(0.01)
+    cameraPos.sub(cameraZDirection);
+
+    uniforms['cameraPos']['value'] = cameraPos;
   }
   if (event.keyCode == 27)
   {
-    console.log("ESC pressed, move forward on agent's Y axis");
+    console.log("ESC pressed, release/lock mouse control of the camera");
   }
+
+  console.log(cameraPos);
 }
 
 window.addEventListener('resize', windowResize, false);

@@ -1,3 +1,6 @@
+// This should store information about the scene, camera, shader data, etc.
+// TODO: implement
+
 class Simulator
 {
     // setup rendering parameters for the shader
