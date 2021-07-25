@@ -89,7 +89,7 @@ float julia(vec2 z, vec2 c){
     vec2 z_0_sq = vec2(x_0_sq - y_0_sq, 2.0*z_0.x*z_0.y);
 
     // the recurrence equation
-    z = z_0_sq + c;
+    z = cm(z_0_sq, z_0_sq) - z_0_sq + c;
 
 
     float z_mag = z.x*z.x + z.y*z.y;
