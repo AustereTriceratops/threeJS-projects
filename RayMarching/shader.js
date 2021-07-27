@@ -1,3 +1,8 @@
+//TODO: write colors into script
+//TODO: Normal calculations
+//TODO: write basic shading
+//TODO: Make compatible with rotations
+
 var fragmentShader = `
 precision highp float;
 
