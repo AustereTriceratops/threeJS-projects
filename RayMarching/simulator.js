@@ -95,10 +95,10 @@ class Simulator
 				// rotate the shader camera
 				// TODO: maybe take new declarations out of this method
 				var zRotation = new THREE.Quaternion();
-				zRotation.setFromAxisAngle(Simulator.cameraZ, Simulator.mouseXDelta/1000.0);
+				zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/800.0);
 				
 				var xRotation = new THREE.Quaternion();
-				xRotation.setFromAxisAngle(Simulator.cameraX, Simulator.mouseYDelta/1000.0);
+				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/800.0);
 	
 				var totalRotation = new THREE.Quaternion();
 				totalRotation.multiplyQuaternions(xRotation, zRotation);
@@ -138,6 +138,8 @@ class Simulator
 			// track how much the mouse has changed from the last animation frame
 			Simulator.mouseXDelta = event.clientX - Simulator.mouseX;
 			Simulator.mouseYDelta = event.clientY - Simulator.mouseY;
+
+			console.log(Simulator.mouseX, event.clientX);
 
 			Simulator.mouseMoved = true;
 		}
