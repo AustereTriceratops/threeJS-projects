@@ -1,9 +1,8 @@
-//TODO: write colors into script
 //TODO: Normal calculations
 //TODO: write basic shading
-//TODO: Make compatible with rotations
 
-var fragmentShader = `
+
+var setup = `
 precision highp float;
 
 // include uniforms
@@ -22,9 +21,18 @@ uniform vec3 cameraPos;
 
 vec2 angleRange = vec2(-45.0, 45.0);
 vec2 cameraPlane = vec2(-0.05, 0.05);
+`
 
+var signedDistanceFunctions = `
+// SDF FUNCTIONS ===================
+float sdSphere( vec3 ray, vec3 center, float s )
+{
+  return mod(length(ray - center) - s, 2.0);
+}
+`
 
-
+var coordinateTransforms =
+`
 // COORDINATE TRANSFORMS ===========
 vec2 to0Pos1( vec2 v )
 {
@@ -44,13 +52,9 @@ float toInterval( vec2 a, vec2 b, float p )
   float m = n * (b.y - b.x) + b.x;
   return m;
 }
+`
 
-// SDF FUNCTIONS ===================
-float sdSphere( vec3 ray, vec3 center, float s )
-{
-  return mod(length(ray - center) - s, 2.0);
-}
-
+var shaderMain = `
 // gl_FragCoord in [0,1]
 void main()
 {
@@ -73,7 +77,7 @@ void main()
   // copy pxl to get position of ray in real space
   vec3 ray = cameraPos + pxl;
 
-  // raymarch for 10 iterations
+  // raymarch for 40 iterations
   for (int i = 0; i < 40; i++)
   {
     float radius1 = sdSphere( ray, sphereCenter, r );
@@ -99,6 +103,8 @@ void main()
 
   gl_FragColor = vec4(color, 1.0);
 }
-`;
+`
+
+var fragmentShader = setup + signedDistanceFunctions + coordinateTransforms + shaderMain;
 
 export {fragmentShader};

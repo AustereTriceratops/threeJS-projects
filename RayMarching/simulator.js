@@ -68,7 +68,6 @@ class Simulator
 
 	static updateUniforms()
 	{
-		console.log(Simulator.mouseMoved);
 		/**
 		 * Simulator.updates flags which uniforms need to be updated each frame
 		 * This method runs through that dictionary and updates the shader
