@@ -48,7 +48,7 @@ float toInterval( vec2 a, vec2 b, float p )
 // SDF FUNCTIONS ===================
 float sdSphere( vec3 ray, vec3 center, float s )
 {
-  return length(ray - center) - s;
+  return mod(length(ray - center) - s, 2.0);
 }
 
 // gl_FragCoord in [0,1]

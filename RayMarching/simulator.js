@@ -139,8 +139,6 @@ class Simulator
 			Simulator.mouseXDelta = event.clientX - Simulator.mouseX;
 			Simulator.mouseYDelta = event.clientY - Simulator.mouseY;
 
-			console.log(Simulator.mouseX, event.clientX);
-
 			Simulator.mouseMoved = true;
 		}
 	}
@@ -149,8 +147,6 @@ class Simulator
 	{
 		// click the mouse to have the camera follow/unfollow the mouse
 		Simulator.trackMouse = !Simulator.trackMouse;
-
-		console.log("mouse clicked");
 
 		Simulator.mouseX = event.clientX;
 		Simulator.mouseY = event.clientY;
