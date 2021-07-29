@@ -95,10 +95,10 @@ class Simulator
 				// rotate the shader camera
 				// TODO: maybe take new declarations out of this method
 				var zRotation = new THREE.Quaternion();
-				zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/800.0);
+				zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/500.0);
 				
 				var xRotation = new THREE.Quaternion();
-				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/800.0);
+				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/500.0);
 	
 				var totalRotation = new THREE.Quaternion();
 				totalRotation.multiplyQuaternions(xRotation, zRotation);

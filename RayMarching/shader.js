@@ -46,20 +46,25 @@ float toInterval( vec2 a, vec2 b, float p )
 }
 
 // SDF FUNCTIONS ===================
-float sdSphere( vec3 p, float s )
+float sdSphere( vec3 ray, vec3 center, float s )
 {
-  return length(p) - s;
+  return length(ray - center) - s;
 }
 
 // gl_FragCoord in [0,1]
 void main()
 {
-  float color = 1.0;
+  vec3 color = vec3(1.0, 1.0, 1.0);
   vec2 uv = toNeg1Pos1(gl_FragCoord.xy);
 
+  //=========================
   //coordinate and radius of sphere 
   vec3 sphereCenter = vec3(0.1, 0.2, 0.0);
   float r = 0.3;
+
+  vec3 sphereCenter2 = vec3(0.5, -0.2, -0.6);
+  float r2 = 0.3;
+  //=========================
 
   // get pxl real space as if camera is centered at origin
   vec3 pxl = 0.05 * uv.x * cameraX + 0.05 * cameraY + 0.05 * uv.y * cameraZ;
@@ -69,22 +74,30 @@ void main()
   vec3 ray = cameraPos + pxl;
 
   // raymarch for 10 iterations
-  for (int i = 0; i < 10; i++)
+  for (int i = 0; i < 40; i++)
   {
-    vec3 diff = ray - sphereCenter;
+    float radius1 = sdSphere( ray, sphereCenter, r );
+    float radius2 = sdSphere( ray, sphereCenter2, r2 );
 
-    float radius = sdSphere( diff, r );
+    float radius = min(radius1, radius2);
 
     if (radius < 0.01)
     {
-      color = 0.0;
+      if (radius == radius1)
+      {
+        color = vec3(0.7,0.4,0.8);
+      }
+      if (radius == radius2)
+      {
+        color = vec3(0.7,0.9,0.7);
+      }
       break;
     }
 
     ray += radius * ray_norm;
   }
 
-  gl_FragColor = vec4(color, color, color, 1.0);
+  gl_FragColor = vec4(color, 1.0);
 }
 `;
 
