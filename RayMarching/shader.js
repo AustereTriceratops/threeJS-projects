@@ -28,6 +28,13 @@ float sdSphere( vec3 ray, vec3 center, float s )
 {
   return length(ray - center) - s;
 }
+
+float sdSquare( vec3 ray, vec3 center, float s )
+{
+  vec3 p = abs(ray - center);
+  vec3 q = p - vec3(s, s, s);
+  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
+}
 `
 
 var coordinateTransforms =
@@ -63,12 +70,16 @@ void main()
   //=========================
   //coordinate and radius of sphere 
   vec3 sphereCenter = vec3(0.1, 0.2, 0.0);
-  vec3 sphereColor = vec3(0.7,0.4,0.8);
+  vec3 sphereColor = vec3(0.7, 0.4, 0.8);
   float r = 0.3;
   
   vec3 sphereCenter2 = vec3(0.5, -0.2, -0.6);
-  vec3 sphereColor2 = vec3(0.7,0.9,0.7);
+  vec3 sphereColor2 = vec3(0.7, 0.9, 0.7);
   float r2 = 0.3;
+
+  vec3 squareCenter = vec3(-0.5, 0.3, -0.1);
+  vec3 squareColor = vec3(0.4, 0.1, 0.3);
+  float squareSide = 0.1;
   //=========================
 
   // get pxl real space as if camera is centered at origin
@@ -84,8 +95,9 @@ void main()
   {
     float radius1 = sdSphere( ray, sphereCenter, r );
     float radius2 = sdSphere( ray, sphereCenter2, r2 );
+    float radius3 = sdSquare( ray, squareCenter, squareSide );
 
-    float radius = min(radius1, radius2);
+    float radius = min(min(radius1, radius2), radius3);
 
     if (radius < 0.01)
     {
@@ -96,6 +108,10 @@ void main()
       if (radius == radius2)
       {
         color = sphereColor2;
+      }
+      if (radius == radius3)
+      {
+        color = squareColor;
       }
       break;
     }
