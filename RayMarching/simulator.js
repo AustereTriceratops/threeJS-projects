@@ -16,6 +16,8 @@ class Simulator
 	static trackMouse = false;
 
 	// camera data
+	//static cameraVerticalSpan = 45.0;
+	//static cameraHorizontalSpan = 40.0;
 	static cameraX = new THREE.Vector3(1.0, 0.0, 0.0);
 	static cameraY = new THREE.Vector3(0.0, 0.0, -1.0);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
@@ -125,7 +127,7 @@ class Simulator
 	static windowResize()
 	{
 		Simulator.aspect = window.innerWidth / window.innerHeight;
-		Simulator.camera.aspect =  aspect;
+		Simulator.camera.aspect =  Simulator.aspect;
 		Simulator.camera.updateProjectionMatrix();
 		Simulator.renderer.setSize( window.innerWidth, window.innerHeight-2);
 	}

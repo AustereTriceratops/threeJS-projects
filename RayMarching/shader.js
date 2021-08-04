@@ -19,15 +19,14 @@ uniform vec3 cameraZ;
 // camera position
 uniform vec3 cameraPos;
 
-vec2 angleRange = vec2(-45.0, 45.0);
-vec2 cameraPlane = vec2(-0.05, 0.05);
+vec2 cameraPlane = vec2(0.001, 0.001);
 `
 
 var signedDistanceFunctions = `
 // SDF FUNCTIONS ===================
 float sdSphere( vec3 ray, vec3 center, float s )
 {
-  return mod(length(ray - center) - s, 2.0);
+  return length(ray - center) - s;
 }
 `
 
@@ -42,7 +41,7 @@ vec2 to0Pos1( vec2 v )
 vec2 toNeg1Pos1( vec2 v )
 {
   vec2 w = to0Pos1(v);
-  return vec2(2.0*(w.x - 0.5), 2.0*(w.y - 0.5));
+  return vec2(2.0*(w.x - 0.5*aspect), 2.0*(w.y - 0.5));
 }
 
 // maps p in interval a to interval b
@@ -64,14 +63,17 @@ void main()
   //=========================
   //coordinate and radius of sphere 
   vec3 sphereCenter = vec3(0.1, 0.2, 0.0);
+  vec3 sphereColor = vec3(0.7,0.4,0.8);
   float r = 0.3;
-
+  
   vec3 sphereCenter2 = vec3(0.5, -0.2, -0.6);
+  vec3 sphereColor2 = vec3(0.7,0.9,0.7);
   float r2 = 0.3;
   //=========================
 
   // get pxl real space as if camera is centered at origin
-  vec3 pxl = 0.05 * uv.x * cameraX + 0.05 * cameraY + 0.05 * uv.y * cameraZ;
+  // should sin() be used here?
+  vec3 pxl = cameraPlane.x * uv.x * cameraX + 1.8*cameraPlane.y * cameraY + cameraPlane.y * uv.y * cameraZ;
   vec3 ray_norm = normalize( pxl );
 
   // copy pxl to get position of ray in real space
@@ -89,11 +91,11 @@ void main()
     {
       if (radius == radius1)
       {
-        color = vec3(0.7,0.4,0.8);
+        color = sphereColor;
       }
       if (radius == radius2)
       {
-        color = vec3(0.7,0.9,0.7);
+        color = sphereColor2;
       }
       break;
     }
