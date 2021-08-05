@@ -116,9 +116,10 @@ void main()
 
         vec3 normal = estimateSphereNormal(ray, sphereCenter, r);
 
-        float light = dot(normal, vec3(1.0, 0.0, 0.0));
+        float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
 
-        color += vec3(light, light, light);
+        //color += 0.3*vec3(fac, fac, fac);
+        color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
       }
       if (radius == radius2)
       {
