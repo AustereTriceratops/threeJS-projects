@@ -37,6 +37,15 @@ float sdSquare( vec3 ray, vec3 center, float s )
 }
 `
 
+var surfaceNormals = `
+vec3 estimateSphereNormal( vec3 ray, vec3 center, float s )
+{
+  return normalize(ray - center);
+}
+
+
+`
+
 var coordinateTransforms =
 `
 // COORDINATE TRANSFORMS ===========
@@ -104,6 +113,12 @@ void main()
       if (radius == radius1)
       {
         color = sphereColor;
+
+        vec3 normal = estimateSphereNormal(ray, sphereCenter, r);
+
+        float light = dot(normal, vec3(1.0, 0.0, 0.0));
+
+        color += vec3(light, light, light);
       }
       if (radius == radius2)
       {
@@ -123,6 +138,6 @@ void main()
 }
 `
 
-var fragmentShader = setup + signedDistanceFunctions + coordinateTransforms + shaderMain;
+var fragmentShader = setup + signedDistanceFunctions + surfaceNormals + coordinateTransforms + shaderMain;
 
 export {fragmentShader};
