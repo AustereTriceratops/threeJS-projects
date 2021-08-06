@@ -38,12 +38,52 @@ float sdSquare( vec3 ray, vec3 center, float s )
 `
 
 var surfaceNormals = `
-vec3 estimateSphereNormal( vec3 ray, vec3 center, float s )
+vec3 exactSphereNormal( vec3 ray, vec3 center, float s )
 {
   return normalize(ray - center);
 }
 
+vec3 estimateSquareNormal( vec3 ray, vec3 center, float s )
+{
+  float delta = 0.0001;
+  float ref = sdSquare(ray, center, s);
 
+  vec2 h = vec2( delta, 0 );
+
+  vec3 normal =  normalize( 
+    vec3(
+      sdSquare(ray + h.xyy, center, s) - ref,
+      sdSquare(ray + h.yxy, center, s) - ref,
+      sdSquare(ray + h.yyx, center, s) - ref
+    ) 
+  );
+
+  return normal;
+}
+
+vec3 exactSquareNormal( vec3 ray, vec3 center, float s )
+{
+  vec3 normal;
+  vec3 p_ = ray - center;
+  vec3 p = abs(p_);
+
+  float max = max(max(p.x, p.y), p.z);
+
+  if (max == p.x)
+  {
+    normal = sign(p_.x) * vec3(1, 0, 0);
+  }
+  else if (max == p.y)
+  {
+    normal = sign(p_.y) * vec3(0, 1, 0);
+  }
+  else
+  {
+    normal = sign(p_.z) * vec3(0, 0, 1);
+  }
+
+  return normal;
+}
 `
 
 var coordinateTransforms =
@@ -86,7 +126,7 @@ void main()
   vec3 sphereColor2 = vec3(0.7, 0.9, 0.7);
   float r2 = 0.3;
 
-  vec3 squareCenter = vec3(-0.5, 0.3, -0.1);
+  vec3 squareCenter = vec3(-0.5, 0.3, 0.1);
   vec3 squareColor = vec3(0.4, 0.1, 0.3);
   float squareSide = 0.1;
   //=========================
@@ -99,8 +139,8 @@ void main()
   // copy pxl to get position of ray in real space
   vec3 ray = cameraPos + pxl;
 
-  // raymarch for 40 iterations
-  for (int i = 0; i < 40; i++)
+  // raymarch for 80 iterations
+  for (int i = 0; i < 80; i++)
   {
     float radius1 = sdSphere( ray, sphereCenter, r );
     float radius2 = sdSphere( ray, sphereCenter2, r2 );
@@ -108,13 +148,13 @@ void main()
 
     float radius = min(min(radius1, radius2), radius3);
 
-    if (radius < 0.01)
+    if (radius < 0.001)
     {
       if (radius == radius1)
       {
         color = sphereColor;
 
-        vec3 normal = estimateSphereNormal(ray, sphereCenter, r);
+        vec3 normal = exactSphereNormal(ray, sphereCenter, r);
 
         float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
 
@@ -128,6 +168,12 @@ void main()
       if (radius == radius3)
       {
         color = squareColor;
+
+        vec3 normal = exactSquareNormal(ray, squareCenter, squareSide);
+
+        float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
+
+        color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
       }
       break;
     }

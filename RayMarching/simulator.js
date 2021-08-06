@@ -95,18 +95,24 @@ class Simulator
 			{
 				// rotate the shader camera
 				// TODO: maybe take new declarations out of this method
+				// TODO: there is a strange bug where the camera rotates on its y axis when the cursor moves in circles
+
 				var zRotation = new THREE.Quaternion();
-				zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/500.0);
-				
 				var xRotation = new THREE.Quaternion();
-				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/500.0);
-	
-				var totalRotation = new THREE.Quaternion();
-				totalRotation.multiplyQuaternions(xRotation, zRotation);
-	
-				Simulator.cameraX.applyQuaternion(totalRotation);
-				Simulator.cameraY.applyQuaternion(totalRotation);
-				Simulator.cameraZ.applyQuaternion(totalRotation);
+
+				for (let i = 0; i < 5; i++)
+				{
+					zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/2000.0);
+					
+					xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/2000.0);
+		
+					var totalRotation = new THREE.Quaternion();
+					totalRotation.multiplyQuaternions(xRotation, zRotation);
+		
+					Simulator.cameraX.applyQuaternion(totalRotation);
+					Simulator.cameraY.applyQuaternion(totalRotation);
+					Simulator.cameraZ.applyQuaternion(totalRotation);
+				}
 	
 				// set mouse position and reset the difference trackers
 				Simulator.mouseX += Simulator.mouseXDelta;
@@ -165,7 +171,7 @@ class Simulator
 		}
 		if (event.keyCode == 65)
 		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.004)
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01)
 			Simulator.cameraPos.sub(cameraXDirection);
 
 			Simulator.updates['cameraPos'] = true;
@@ -179,21 +185,21 @@ class Simulator
 		}
 		if (event.keyCode == 68)
 		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.004)
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01)
 			Simulator.cameraPos.add(cameraXDirection);
 
 			Simulator.updates['cameraPos'] = true;
 		}
 		if (event.keyCode == 32)
 		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.004)
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01)
 			Simulator.cameraPos.add(cameraZDirection);
 
 			Simulator.updates['cameraPos'] = true;
 		}
 		if (event.keyCode == 16)
 		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.004)
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01)
 			Simulator.cameraPos.sub(cameraZDirection);
 
 			Simulator.updates['cameraPos'] = true;
