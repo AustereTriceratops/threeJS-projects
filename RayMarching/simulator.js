@@ -18,13 +18,20 @@ class Simulator
 	// camera data
 	//static cameraVerticalSpan = 45.0;
 	//static cameraHorizontalSpan = 40.0;
+	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 	static cameraX = new THREE.Vector3(1.0, 0.0, 0.0);
 	static cameraY = new THREE.Vector3(0.0, 0.0, -1.0);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
 	static cameraPos = new THREE.Vector3(0.0, 0.0, 1.0);
-
+	static cameraTheta = 0.0;
+	static cameraPsi = 0.0;
+	
+	//Coordinate data
+	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);
+	static globalY = new THREE.Vector3(0.0, 1.0, 0.0);
+	static globalZ = new THREE.Vector3(0.0, 0.0, 1.0);
+	
 	// THREE.js objects
-	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 	static scene = new THREE.Scene();
 	static renderer = new THREE.WebGLRenderer( { antialias: false, precision:'highp' } );
 
@@ -95,24 +102,21 @@ class Simulator
 			{
 				// rotate the shader camera
 				// TODO: maybe take new declarations out of this method
-				// TODO: there is a strange bug where the camera rotates on its y axis when the cursor moves in circles
 
-				var zRotation = new THREE.Quaternion();
-				var xRotation = new THREE.Quaternion();
+				let zRotation = new THREE.Quaternion();
+				let xRotation = new THREE.Quaternion();
 
-				for (let i = 0; i < 5; i++)
-				{
-					zRotation.setFromAxisAngle(Simulator.cameraZ, -Simulator.mouseXDelta/2000.0);
-					
-					xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/2000.0);
-		
-					var totalRotation = new THREE.Quaternion();
-					totalRotation.multiplyQuaternions(xRotation, zRotation);
-		
-					Simulator.cameraX.applyQuaternion(totalRotation);
-					Simulator.cameraY.applyQuaternion(totalRotation);
-					Simulator.cameraZ.applyQuaternion(totalRotation);
-				}
+				zRotation.setFromAxisAngle(Simulator.globalY, -Simulator.mouseXDelta/400.0);
+				
+				Simulator.cameraX.applyQuaternion(zRotation);
+				Simulator.cameraY.applyQuaternion(zRotation);
+				Simulator.cameraZ.applyQuaternion(zRotation);
+				
+				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/400.0);
+				
+				Simulator.cameraX.applyQuaternion(xRotation);
+				Simulator.cameraY.applyQuaternion(xRotation);
+				Simulator.cameraZ.applyQuaternion(xRotation);
 	
 				// set mouse position and reset the difference trackers
 				Simulator.mouseX += Simulator.mouseXDelta;
