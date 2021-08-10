@@ -2,12 +2,10 @@ class Simulator
 {
 	// GLOBALS ================================================
 	static aspect = window.innerWidth / window.innerHeight;
-	static zoom = 1.0;
 	static offset = new THREE.Vector2(-0.50*Simulator.aspect, -0.5);
-	static uniforms;
 	static firstMouseMove = true;
 	static mouseMoved = true;
-
+	
 	// mouse data
 	static mouseX = 0.0;
 	static mouseY = 0.0;
@@ -15,21 +13,38 @@ class Simulator
 	static mouseXDelta = 0.0;
 	static trackMouse = false;
 
+	// keyboard input data
+	static keyTracker = {
+		"w": false,
+		"a": false,
+		"s": false,
+		"d": false,
+		" ": false,
+		"Shift": false,
+	};
+
 	// camera data
-	//static cameraVerticalSpan = 45.0;
-	//static cameraHorizontalSpan = 40.0;
 	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 	static cameraX = new THREE.Vector3(1.0, 0.0, 0.0);
 	static cameraY = new THREE.Vector3(0.0, 0.0, -1.0);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
 	static cameraPos = new THREE.Vector3(0.0, 0.0, 1.0);
-	static cameraTheta = 0.0;
-	static cameraPsi = 0.0;
 	
 	//Coordinate data
 	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);
 	static globalY = new THREE.Vector3(0.0, 1.0, 0.0);
 	static globalZ = new THREE.Vector3(0.0, 0.0, 1.0);
+
+	// data passed to shader
+	static uniforms = {
+		res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
+		aspect: {type: 'float', value: Simulator.aspect},
+		offset: {type: 'float', value: Simulator.offset},
+		cameraX: {type: 'vec3', value: Simulator.cameraX},
+		cameraY: {type: 'vec3', value: Simulator.cameraY},
+		cameraZ: {type: 'vec3', value: Simulator.cameraZ},
+		cameraPos: {type: 'vec3', value: Simulator.cameraPos},
+	};
 	
 	// THREE.js objects
 	static scene = new THREE.Scene();
@@ -42,17 +57,6 @@ class Simulator
 		Simulator.renderer.setSize( window.innerWidth, window.innerHeight );
 		document.body.appendChild( Simulator.renderer.domElement );
 
-		Simulator.uniforms = {
-			res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
-			aspect: {type: 'float', value: Simulator.aspect},
-			zoom: {type:'float', value: Simulator.zoom},
-			offset: {type: 'float', value: Simulator.offset},
-			cameraX: {type: 'vec3', value: Simulator.cameraX},
-			cameraY: {type: 'vec3', value: Simulator.cameraY},
-			cameraZ: {type: 'vec3', value: Simulator.cameraZ},
-			cameraPos: {type: 'vec3', value: Simulator.cameraPos},
-		};
-
 		Simulator.updates = {
 			res: false,
 			aspect: false,
@@ -61,7 +65,6 @@ class Simulator
 			cameraX: false,
 			cameraY: false,
 			cameraZ: false,
-			cameraPos: false,
 		};
 	}
 
@@ -88,11 +91,12 @@ class Simulator
 		{
 			if (Simulator.updates[key])
 			{
-				Simulator.uniforms[key]["value"] = Simulator[key];
 				Simulator.updates[key] = false;
 			}
-
+			
 		}
+
+		Simulator.updateCameraPosition();
 		
 		if (Simulator.mouseMoved)
 		{
@@ -100,30 +104,7 @@ class Simulator
 
 			if ( !Simulator.firstMouseMove)
 			{
-				// rotate the shader camera
-				// TODO: maybe take new declarations out of this method
-
-				let zRotation = new THREE.Quaternion();
-				let xRotation = new THREE.Quaternion();
-
-				zRotation.setFromAxisAngle(Simulator.globalY, -Simulator.mouseXDelta/400.0);
-				
-				Simulator.cameraX.applyQuaternion(zRotation);
-				Simulator.cameraY.applyQuaternion(zRotation);
-				Simulator.cameraZ.applyQuaternion(zRotation);
-				
-				xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/400.0);
-				
-				Simulator.cameraX.applyQuaternion(xRotation);
-				Simulator.cameraY.applyQuaternion(xRotation);
-				Simulator.cameraZ.applyQuaternion(xRotation);
-	
-				// set mouse position and reset the difference trackers
-				Simulator.mouseX += Simulator.mouseXDelta;
-				Simulator.mouseY += Simulator.mouseYDelta;
-	
-				Simulator.mouseXDelta = 0.0;
-				Simulator.mouseYDelta = 0.0;
+				Simulator.updateCameraRotation()
 			}
 			else
 			{
@@ -132,10 +113,74 @@ class Simulator
 		}
 	}
 
+	static updateCameraPosition()
+	{
+		console.log(Simulator.keyTracker["w"]);
+		if (Simulator.keyTracker["w"])
+		{
+			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.add(cameraYDirection);
+		}
+		if (Simulator.keyTracker["a"])
+		{
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.sub(cameraXDirection);
+		}
+		if (Simulator.keyTracker["s"])
+		{
+			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.sub(cameraYDirection);
+		}
+		if (Simulator.keyTracker["d"])
+		{
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.add(cameraXDirection);
+		}
+		if (Simulator.keyTracker[" "])
+		{
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.add(cameraZDirection);
+		}
+		if (Simulator.keyTracker["Shift"])
+		{
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01);
+			Simulator.cameraPos.sub(cameraZDirection);
+		}
+	}
+
+	static updateCameraRotation()
+	{
+		// rotate the shader camera
+		// TODO: maybe take new declarations out of this method
+
+		let zRotation = new THREE.Quaternion();
+		let xRotation = new THREE.Quaternion();
+
+		zRotation.setFromAxisAngle(Simulator.globalY, -Simulator.mouseXDelta/400.0);
+		
+		Simulator.cameraX.applyQuaternion(zRotation);
+		Simulator.cameraY.applyQuaternion(zRotation);
+		Simulator.cameraZ.applyQuaternion(zRotation);
+		
+		xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/400.0);
+		
+		Simulator.cameraX.applyQuaternion(xRotation);
+		Simulator.cameraY.applyQuaternion(xRotation);
+		Simulator.cameraZ.applyQuaternion(xRotation);
+
+		// set mouse position and reset the difference trackers
+		Simulator.mouseX += Simulator.mouseXDelta;
+		Simulator.mouseY += Simulator.mouseYDelta;
+
+		Simulator.mouseXDelta = 0.0;
+		Simulator.mouseYDelta = 0.0;
+	}
+
 
 	// EVENTS ================================================
 	static windowResize()
 	{
+		// TODO: aspect should be passed to shader camera, not the "real" camera
 		Simulator.aspect = window.innerWidth / window.innerHeight;
 		Simulator.camera.aspect =  Simulator.aspect;
 		Simulator.camera.updateProjectionMatrix();
@@ -163,66 +208,19 @@ class Simulator
 		Simulator.mouseY = event.clientY;
 	}
 
-	// TODO: make this work with multiple keys down
-	static handleInput(event)
+	static onKeyDown(event)
 	{
-		if (event.keyCode == 87)
+		if (event.key in Simulator.keyTracker)
 		{
-			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.add(cameraYDirection);
+			Simulator.keyTracker[event.key] = true;
+		}
+	}
 
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 65)
+	static onKeyUp(event)
+	{
+		if (event.key in Simulator.keyTracker)
 		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.sub(cameraXDirection);
-
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 83)
-		{
-			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.sub(cameraYDirection);
-
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 68)
-		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.add(cameraXDirection);
-
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 32)
-		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.add(cameraZDirection);
-
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 16)
-		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01)
-			Simulator.cameraPos.sub(cameraZDirection);
-
-			Simulator.updates['cameraPos'] = true;
-		}
-		if (event.keyCode == 37)
-		{
-			console.log("Left arrow key down, rotate camera about its Z axis");
-		}
-		if (event.keyCode == 38)
-		{
-			console.log("Up arrow key down, rotate camera about its X axis");
-		}
-		if (event.keyCode == 39)
-		{
-			console.log("Right arrow key down, rotate camera about its Z axis");
-		}
-		if (event.keyCode == 40)
-		{
-			console.log("Down arrow key down, rotate camera about its X axis");
+			Simulator.keyTracker[event.key] = false;
 		}
 	}
 }

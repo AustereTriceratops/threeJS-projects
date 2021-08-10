@@ -32,7 +32,8 @@ function main()
 window.addEventListener('resize', Simulator.windowResize, false);
 window.addEventListener('mousemove', Simulator.mouseMove, false);
 window.addEventListener('click', Simulator.mouseClick, false);
-window.addEventListener('keydown', Simulator.handleInput, false);
+window.addEventListener('keydown', Simulator.onKeyDown, false);
+window.addEventListener('keyup', Simulator.onKeyUp, false);
 
 // call to main
 main();
