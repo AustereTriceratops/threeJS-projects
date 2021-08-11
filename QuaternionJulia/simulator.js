@@ -28,7 +28,7 @@ class Simulator
 	static cameraX = new THREE.Vector3(1.0, 0.0, 0.0);
 	static cameraY = new THREE.Vector3(0.0, 0.0, -1.0);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
-	static cameraPos = new THREE.Vector3(0.0, 0.0, 1.0);
+	static cameraPos = new THREE.Vector3(0.0, 0.0, 1.5);
 	
 	//Coordinate data
 	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);

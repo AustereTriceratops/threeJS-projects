@@ -47,12 +47,12 @@ vec4 quatSq( vec4 q )
 // dp: derivative estimate
 void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
-  for( int i=0; i<20; i++ )
+  for( int i=0; i<10; i++ )
   {
     dq = 2.0 * quaternionMult(q, dq);
     q = quatSq(q) + c;
 
-    if( dot( q, q ) > 10.0 )
+    if( dot( q, q ) > 1000.0 )
     {
       break;
     }
@@ -62,7 +62,7 @@ void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 
 // ray: position of end of ray in real space
 // center: center of the Julia set
-// C: parameters defining the Julia set
+// c: parameters defining the Julia set
 float JuliaSDF( vec3 ray, vec3 center, vec4 c )
 {
   float dist = 0.0;
@@ -77,7 +77,7 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
 
   float x =  dot( q, q );
   float y = dot( dq, dq );
-  dist = 0.5 * sqrt( x / y ) * log( x );
+  dist = 0.4 * sqrt( x / y ) * log( x );
 
   return dist;
 }
@@ -193,7 +193,7 @@ var shaderMain = `
 // gl_FragCoord in [0,1]
 void main()
 {
-  vec3 color = vec3(0.97, 0.94, 0.91);
+  vec3 color = vec3(0.79, 0.75, 0.76);
   vec2 uv = toNeg1Pos1(gl_FragCoord.xy);
 
   // get pxl real space as if camera is centered at origin
@@ -213,9 +213,9 @@ void main()
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    if (radius < 0.0001)
+    if (radius < 0.001)
     {
-      color = vec3(0.4, 0.81, 0.92);
+      color = vec3(0.51, 0.68, 0.35);
 
       vec3 normal = estimateJuliaNormal(ray, juliaCenter, juliaSeed);
       float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
