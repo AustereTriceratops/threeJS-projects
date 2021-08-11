@@ -52,7 +52,7 @@ void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
     dq = 2.0 * quaternionMult(q, dq);
     q = quatSq(q) + c;
 
-    if( dot( q, q ) > 1000.0 )
+    if( dot( q, q ) > 5000.0 )
     {
       break;
     }

@@ -25,10 +25,11 @@ class Simulator
 
 	// camera data
 	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
-	static cameraX = new THREE.Vector3(1.0, 0.0, 0.0);
-	static cameraY = new THREE.Vector3(0.0, 0.0, -1.0);
+	//static cameraX = new THREE.Vector3(-0.8, 9.0, -0.6);
+	static cameraX = new THREE.Vector3(-0.61, 0.0, -0.79);
+	static cameraY = new THREE.Vector3(-0.79, 0.0, 0.61);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
-	static cameraPos = new THREE.Vector3(0.0, 0.0, 1.5);
+	static cameraPos = new THREE.Vector3(1.15, -0.21, -1.2);
 	
 	//Coordinate data
 	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);
@@ -115,7 +116,6 @@ class Simulator
 
 	static updateCameraPosition()
 	{
-		console.log(Simulator.keyTracker["w"]);
 		if (Simulator.keyTracker["w"])
 		{
 			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01);
@@ -213,6 +213,14 @@ class Simulator
 		if (event.key in Simulator.keyTracker)
 		{
 			Simulator.keyTracker[event.key] = true;
+		}
+
+		if (event.key == "c")
+		{
+			console.log(Simulator.cameraPos);
+			console.log(Simulator.cameraX);
+			console.log(Simulator.cameraY);
+			console.log(Simulator.cameraZ);
 		}
 	}
 
