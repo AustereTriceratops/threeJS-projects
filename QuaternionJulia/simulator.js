@@ -25,7 +25,6 @@ class Simulator
 
 	// camera data
 	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
-	//static cameraX = new THREE.Vector3(-0.8, 9.0, -0.6);
 	static cameraX = new THREE.Vector3(-0.61, 0.0, -0.79);
 	static cameraY = new THREE.Vector3(-0.79, 0.0, 0.61);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
