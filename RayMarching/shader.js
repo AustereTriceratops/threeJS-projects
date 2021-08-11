@@ -1,5 +1,6 @@
-//TODO: Normal calculations
-//TODO: write basic shading
+// TODO: fix grainy renders somehow
+// TODO: refactoring and cleanup
+// TODO: use sphere SDF when ray is outside (not sure if a good idea when camera is inside the set)
 
 
 var setup = `
@@ -18,8 +19,87 @@ uniform vec3 cameraZ;
 
 // camera position
 uniform vec3 cameraPos;
+`
 
-vec2 cameraPlane = vec2(0.001, 0.001);
+var quaternions = `
+vec4 quaternionMult(vec4 q1, vec4 q2)
+{
+  vec4 r;
+
+  r.x = q1.x*q2.x - dot( q1.yzw, q2.yzw );
+  r.yzw = q1.x*q2.yzw + q2.x*q1.yzw + cross( q1.yzw, q2.yzw );
+
+  return r;
+}
+
+vec4 quatSq( vec4 q )
+{
+  vec4 r;
+
+  r.x = q.x*q.x - dot( q.yzw, q.yzw );
+  r.yzw = 2.0*q.x*q.yzw;
+
+  return r;
+}
+
+
+// q: starting quaternion
+// dp: derivative estimate
+void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
+{
+  for( int i=0; i<20; i++ )
+  {
+    dq = 2.0 * quaternionMult(q, dq);
+    q = quatSq(q) + c;
+
+    if( dot( q, q ) > 10.0 )
+    {
+      break;
+    }
+  }
+}
+
+
+// ray: position of end of ray in real space
+// center: center of the Julia set
+// C: parameters defining the Julia set
+float JuliaSDF( vec3 ray, vec3 center, vec4 c )
+{
+  float dist = 0.0;
+
+  // get vector from Julia set's center to real space
+  vec3 p = ray - center;
+
+  vec4 q = vec4( p, 0.0 );
+  vec4 dq = vec4( 1.0, 0.0, 0.0, 0.0 );
+
+  iterateIntersect( q, dq, c );
+
+  float x =  dot( q, q );
+  float y = dot( dq, dq );
+  dist = 0.5 * sqrt( x / y ) * log( x );
+
+  return dist;
+}
+
+
+vec3 estimateJuliaNormal( vec3 ray, vec3 center, vec4 c )
+{
+  float delta = 0.0001;
+  float ref = JuliaSDF(ray, center, c);
+
+  vec2 h = vec2( delta, 0 );
+
+  vec3 normal =  normalize( 
+    vec3(
+      JuliaSDF(ray + h.xyy, center, c) - ref,
+      JuliaSDF(ray + h.yxy, center, c) - ref,
+      JuliaSDF(ray + h.yyx, center, c) - ref
+    ) 
+  );
+
+  return normal;
+}
 `
 
 var signedDistanceFunctions = `
@@ -113,68 +193,39 @@ var shaderMain = `
 // gl_FragCoord in [0,1]
 void main()
 {
-  vec3 color = vec3(1.0, 1.0, 1.0);
+  vec3 color = vec3(0.97, 0.94, 0.91);
   vec2 uv = toNeg1Pos1(gl_FragCoord.xy);
 
-  //=========================
-  //coordinate and radius of sphere 
-  vec3 sphereCenter = vec3(0.1, 0.2, 0.0);
-  vec3 sphereColor = vec3(0.7, 0.4, 0.8);
-  float r = 0.3;
-  
-  vec3 sphereCenter2 = vec3(0.5, -0.2, -0.6);
-  vec3 sphereColor2 = vec3(0.7, 0.9, 0.7);
-  float r2 = 0.3;
-
-  vec3 squareCenter = vec3(-0.5, 0.3, 0.1);
-  vec3 squareColor = vec3(0.4, 0.1, 0.3);
-  float squareSide = 0.1;
-  //=========================
-
   // get pxl real space as if camera is centered at origin
-  // should sin() be used here?
-  vec3 pxl = cameraPlane.x * uv.x * cameraX + 1.8*cameraPlane.y * cameraY + cameraPlane.y * uv.y * cameraZ;
+  vec3 pxl = uv.x * cameraX + cameraY + uv.y * cameraZ;
   vec3 ray_norm = normalize( pxl );
 
-  // copy pxl to get position of ray in real space
-  vec3 ray = cameraPos + pxl;
+  // get position of ray in real space
+  vec3 ray = cameraPos.xyz;
 
-  // raymarch for 80 iterations
-  for (int i = 0; i < 80; i++)
+  // ====================
+  vec4 juliaSeed = vec4(0.33, 0.56, 0.0, -0.72);
+  vec3 juliaCenter = vec3(0.0, 0.0, 0.0);
+  // ====================
+
+  // raymarch for 120 iterations
+  for (int i = 0; i < 120; i++)
   {
-    float radius1 = sdSphere( ray, sphereCenter, r );
-    float radius2 = sdSphere( ray, sphereCenter2, r2 );
-    float radius3 = sdSquare( ray, squareCenter, squareSide );
+    float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    float radius = min(min(radius1, radius2), radius3);
-
-    if (radius < 0.001)
+    if (radius < 0.0001)
     {
-      if (radius == radius1)
-      {
-        color = sphereColor;
+      color = vec3(0.4, 0.81, 0.92);
 
-        vec3 normal = exactSphereNormal(ray, sphereCenter, r);
+      vec3 normal = estimateJuliaNormal(ray, juliaCenter, juliaSeed);
+      float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
+      color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
+      
+      break;
+    }
 
-        float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
-
-        //color += 0.3*vec3(fac, fac, fac);
-        color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
-      }
-      if (radius == radius2)
-      {
-        color = sphereColor2;
-      }
-      if (radius == radius3)
-      {
-        color = squareColor;
-
-        vec3 normal = exactSquareNormal(ray, squareCenter, squareSide);
-
-        float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
-
-        color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
-      }
+    if (radius > 5.0)
+    {
       break;
     }
 
@@ -185,6 +236,6 @@ void main()
 }
 `
 
-var fragmentShader = setup + signedDistanceFunctions + surfaceNormals + coordinateTransforms + shaderMain;
+var fragmentShader = setup + signedDistanceFunctions + quaternions + surfaceNormals + coordinateTransforms + shaderMain;
 
 export {fragmentShader};

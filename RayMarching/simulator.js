@@ -156,13 +156,13 @@ class Simulator
 		let zRotation = new THREE.Quaternion();
 		let xRotation = new THREE.Quaternion();
 
-		zRotation.setFromAxisAngle(Simulator.globalY, -Simulator.mouseXDelta/400.0);
+		zRotation.setFromAxisAngle(Simulator.globalY, -Simulator.mouseXDelta/300.0);
 		
 		Simulator.cameraX.applyQuaternion(zRotation);
 		Simulator.cameraY.applyQuaternion(zRotation);
 		Simulator.cameraZ.applyQuaternion(zRotation);
 		
-		xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/400.0);
+		xRotation.setFromAxisAngle(Simulator.cameraX, -Simulator.mouseYDelta/300.0);
 		
 		Simulator.cameraX.applyQuaternion(xRotation);
 		Simulator.cameraY.applyQuaternion(xRotation);
