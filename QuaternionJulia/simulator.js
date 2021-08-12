@@ -11,11 +11,13 @@ class Simulator
 	// mouse data
 	static firstMouseMove = true;
 	static mouseMoved = true;
+	static isMouseDown = false;
 	static mouseX = 0.0;
 	static mouseY = 0.0;
 	static mouseXDelta = 0.0;
 	static mouseXDelta = 0.0;
 	static trackMouse = false;
+	static ignoreMouseUp = false;
 
 	// keyboard input data
 	static keyTracker = {
@@ -224,16 +226,36 @@ class Simulator
 
 			Simulator.mouseMoved = true;
 		}
+
+		// when dragging, don't toggle the camera
+		if (Simulator.isMouseDown)
+		{
+			Simulator.ignoreMouseUp = true;
+		}
 	}
 
-	// TODO: figure out mouse dragging bug when changing parameters with GUI
+	static mouseDown()
+	{
+		Simulator.isMouseDown = true;
+	}
+
 	static mouseUp(event)
 	{
-		// click the mouse to have the camera follow/unfollow the mouse
-		Simulator.trackMouse = !Simulator.trackMouse;
+		if (Simulator.ignoreMouseUp)
+		{
+			// if this mouseup event was ignored, then reset the bool so that the next one might be acknowledged
+			Simulator.ignoreMouseUp = false;
+		}
+		else
+		{
+			// click the mouse to have the camera follow/unfollow the mouse
+			Simulator.trackMouse = !Simulator.trackMouse;
+	
+			Simulator.mouseX = event.clientX;
+			Simulator.mouseY = event.clientY;
+		}
 
-		Simulator.mouseX = event.clientX;
-		Simulator.mouseY = event.clientY;
+		Simulator.isMouseDown = false;
 	}
 
 	static onKeyDown(event)

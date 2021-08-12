@@ -51,7 +51,7 @@ vec4 quatSq( vec4 q )
 // dp: derivative estimate
 void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
-  for( int i=0; i<10; i++ )
+  for( int i=0; i<20; i++ )
   {
     dq = 2.0 * quaternionMult(q, dq);
     q = quatSq(q) + c;

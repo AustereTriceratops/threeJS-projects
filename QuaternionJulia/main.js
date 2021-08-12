@@ -34,6 +34,7 @@ function main()
 
 window.addEventListener('resize', Simulator.windowResize, false);
 window.addEventListener('mousemove', Simulator.mouseMove, false);
+window.addEventListener('mousedown', Simulator.mouseDown, false);
 window.addEventListener('mouseup', Simulator.mouseUp, false);
 window.addEventListener('keydown', Simulator.onKeyDown, false);
 window.addEventListener('keyup', Simulator.onKeyUp, false);
