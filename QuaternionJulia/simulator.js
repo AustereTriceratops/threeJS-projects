@@ -5,7 +5,6 @@ class Simulator
 	static offset = new THREE.Vector2(-0.50*Simulator.aspect, -0.5);
 	static firstMouseMove = true;
 	static mouseMoved = true;
-	static frameCounter = 0;
 	
 	// mouse data
 	static mouseX = 0.0;
@@ -69,7 +68,6 @@ class Simulator
 	// ANIMATION ================================================
 	static animate()
 	{
-		Simulator.frameCounter++;
 		Simulator.updateUniforms();
 
 		Simulator.renderer.render(Simulator.scene, Simulator.camera);
@@ -104,21 +102,6 @@ class Simulator
 			{
 				Simulator.firstMouseMove = false;
 			}
-		}
-		
-		// there was a bug where some keys in keyTracker were stuck on true after the keyUp event
-		// failed to register. Resetting everything in keyTracker to false after every frame made 
-		// movement jump, stop, and start again since that's how the timing of the keydown event works.
-		// So, this is a way around that by registering the first move as normal, and then resetting 
-		// everything after 10 frames to avoid input getting stuck
-		if (Simulator.frameCounter == 10)
-		{
-			for (var key in Simulator.keyTracker)
-			{
-				Simulator.keyTracker[key] = false;
-			}
-
-			Simulator.frameCounter = 0;
 		}
 	}
 	
@@ -219,6 +202,7 @@ class Simulator
 
 	static onKeyDown(event)
 	{
+		//console.log(event.key);
 		if (event.key in Simulator.keyTracker)
 		{
 			Simulator.keyTracker[event.key] = true;
