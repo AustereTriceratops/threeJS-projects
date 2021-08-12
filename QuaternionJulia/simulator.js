@@ -5,6 +5,7 @@ class Simulator
 	static offset = new THREE.Vector2(-0.50*Simulator.aspect, -0.5);
 	static firstMouseMove = true;
 	static mouseMoved = true;
+	static frameCounter = 0;
 	
 	// mouse data
 	static mouseX = 0.0;
@@ -60,11 +61,7 @@ class Simulator
 		Simulator.updates = {
 			res: false,
 			aspect: false,
-			zoom: false,
 			offset: false,
-			cameraX: false,
-			cameraY: false,
-			cameraZ: false,
 		};
 	}
 
@@ -72,28 +69,25 @@ class Simulator
 	// ANIMATION ================================================
 	static animate()
 	{
+		Simulator.frameCounter++;
 		Simulator.updateUniforms();
 
 		Simulator.renderer.render(Simulator.scene, Simulator.camera);
 		requestAnimationFrame(Simulator.animate);
 	}
-
+	
 	static updateUniforms()
 	{
 		/**
-		 * Simulator.updates flags which uniforms need to be updated each frame
-		 * This method runs through that dictionary and updates the shader
-		 * uniforms which have been flagged for updating.
-		 * 
-		 * Running this every frame is more efficient than running it after every event.
-		 */
-		for (var key in Object.keys(Simulator.updates))
+		* Simulator.updates flags which uniforms need to be updated each frame
+		* This method runs through that dictionary and updates the shader
+		* uniforms which have been flagged for updating.
+		* 
+		* Running this every frame is more efficient than running it after every event.
+		*/
+		for (var key in Simulator.updates)
 		{
-			if (Simulator.updates[key])
-			{
-				Simulator.updates[key] = false;
-			}
-			
+			Simulator.updates[key] = false;
 		}
 
 		Simulator.updateCameraPosition();
@@ -101,7 +95,7 @@ class Simulator
 		if (Simulator.mouseMoved)
 		{
 			Simulator.mouseMoved = false;
-
+			
 			if ( !Simulator.firstMouseMove)
 			{
 				Simulator.updateCameraRotation()
@@ -111,8 +105,24 @@ class Simulator
 				Simulator.firstMouseMove = false;
 			}
 		}
-	}
+		
+		// there was a bug where some keys in keyTracker were stuck on true after the keyUp event
+		// failed to register. Resetting everything in keyTracker to false after every frame made 
+		// movement jump, stop, and start again since that's how the timing of the keydown event works.
+		// So, this is a way around that by registering the first move as normal, and then resetting 
+		// everything after 10 frames to avoid input getting stuck
+		if (Simulator.frameCounter == 10)
+		{
+			for (var key in Simulator.keyTracker)
+			{
+				Simulator.keyTracker[key] = false;
+			}
 
+			Simulator.frameCounter = 0;
+		}
+	}
+	
+	// update the camera's position when a given key has been held down
 	static updateCameraPosition()
 	{
 		if (Simulator.keyTracker["w"])
@@ -212,14 +222,6 @@ class Simulator
 		if (event.key in Simulator.keyTracker)
 		{
 			Simulator.keyTracker[event.key] = true;
-		}
-
-		if (event.key == "c")
-		{
-			console.log(Simulator.cameraPos);
-			console.log(Simulator.cameraX);
-			console.log(Simulator.cameraY);
-			console.log(Simulator.cameraZ);
 		}
 	}
 
