@@ -19,6 +19,10 @@ uniform vec3 cameraZ;
 
 // camera position
 uniform vec3 cameraPos;
+
+// Julia set parameters
+uniform vec4 juliaSeed;
+uniform float plane;
 `
 
 var quaternions = `
@@ -70,14 +74,14 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
   // get vector from Julia set's center to real space
   vec3 p = ray - center;
 
-  vec4 q = vec4( p, 0.0 );
+  vec4 q = vec4( p, plane );
   vec4 dq = vec4( 1.0, 0.0, 0.0, 0.0 );
 
   iterateIntersect( q, dq, c );
 
   float x =  dot( q, q );
   float y = dot( dq, dq );
-  dist = 0.4 * sqrt( x / y ) * log( x );
+  dist = 0.39 * sqrt( x / y ) * log( x );
 
   return dist;
 }
@@ -114,55 +118,6 @@ float sdSquare( vec3 ray, vec3 center, float s )
   vec3 p = abs(ray - center);
   vec3 q = p - vec3(s, s, s);
   return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
-}
-`
-
-var surfaceNormals = `
-vec3 exactSphereNormal( vec3 ray, vec3 center, float s )
-{
-  return normalize(ray - center);
-}
-
-vec3 estimateSquareNormal( vec3 ray, vec3 center, float s )
-{
-  float delta = 0.0001;
-  float ref = sdSquare(ray, center, s);
-
-  vec2 h = vec2( delta, 0 );
-
-  vec3 normal =  normalize( 
-    vec3(
-      sdSquare(ray + h.xyy, center, s) - ref,
-      sdSquare(ray + h.yxy, center, s) - ref,
-      sdSquare(ray + h.yyx, center, s) - ref
-    ) 
-  );
-
-  return normal;
-}
-
-vec3 exactSquareNormal( vec3 ray, vec3 center, float s )
-{
-  vec3 normal;
-  vec3 p_ = ray - center;
-  vec3 p = abs(p_);
-
-  float max = max(max(p.x, p.y), p.z);
-
-  if (max == p.x)
-  {
-    normal = sign(p_.x) * vec3(1, 0, 0);
-  }
-  else if (max == p.y)
-  {
-    normal = sign(p_.y) * vec3(0, 1, 0);
-  }
-  else
-  {
-    normal = sign(p_.z) * vec3(0, 0, 1);
-  }
-
-  return normal;
 }
 `
 
@@ -204,12 +159,11 @@ void main()
   vec3 ray = cameraPos.xyz;
 
   // ====================
-  vec4 juliaSeed = vec4(0.33, 0.56, 0.0, -0.72);
   vec3 juliaCenter = vec3(0.0, 0.0, 0.0);
   // ====================
 
   // raymarch for 120 iterations
-  for (int i = 0; i < 120; i++)
+  for (int i = 0; i < 100; i++)
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
@@ -236,6 +190,6 @@ void main()
 }
 `
 
-var fragmentShader = setup + signedDistanceFunctions + quaternions + surfaceNormals + coordinateTransforms + shaderMain;
+var fragmentShader = setup + signedDistanceFunctions + quaternions + coordinateTransforms + shaderMain;
 
 export {fragmentShader};

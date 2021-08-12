@@ -1,12 +1,16 @@
+// TODO: make singleton
+// TODO: add docstrings
 class Simulator
 {
 	// GLOBALS ================================================
+	// screen data
 	static aspect = window.innerWidth / window.innerHeight;
 	static offset = new THREE.Vector2(-0.50*Simulator.aspect, -0.5);
+	
+	// TODO: move mouse to another class
+	// mouse data
 	static firstMouseMove = true;
 	static mouseMoved = true;
-	
-	// mouse data
 	static mouseX = 0.0;
 	static mouseY = 0.0;
 	static mouseXDelta = 0.0;
@@ -23,6 +27,7 @@ class Simulator
 		"Shift": false,
 	};
 
+	// TODO: move camera to another class
 	// camera data
 	static camera = new THREE.OrthographicCamera( -1, 1, 1, -1, -1, 1);
 	static cameraX = new THREE.Vector3(-0.61, 0.0, -0.79);
@@ -36,6 +41,21 @@ class Simulator
 	static globalZ = new THREE.Vector3(0.0, 0.0, 1.0);
 
 	// data passed to shader
+	static parameters = {
+		x: 0.33,
+		y: 0.56,
+		z: 0.43,
+		w: -0.72,
+		p: 0.01,
+	}
+
+	static juliaSeed = new THREE.Vector4(
+		Simulator.parameters.x, 
+		Simulator.parameters.y, 
+		Simulator.parameters.z,
+		Simulator.parameters.w
+	);
+
 	static uniforms = {
 		res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
 		aspect: {type: 'float', value: Simulator.aspect},
@@ -44,6 +64,8 @@ class Simulator
 		cameraY: {type: 'vec3', value: Simulator.cameraY},
 		cameraZ: {type: 'vec3', value: Simulator.cameraZ},
 		cameraPos: {type: 'vec3', value: Simulator.cameraPos},
+		juliaSeed: {type: 'vec4', value: Simulator.juliaSeed},
+		plane: {type: 'float', value: Simulator.parameters.p},
 	};
 	
 	// THREE.js objects
@@ -61,6 +83,7 @@ class Simulator
 			res: false,
 			aspect: false,
 			offset: false,
+			juliaSeed: false,
 		};
 	}
 
@@ -76,18 +99,6 @@ class Simulator
 	
 	static updateUniforms()
 	{
-		/**
-		* Simulator.updates flags which uniforms need to be updated each frame
-		* This method runs through that dictionary and updates the shader
-		* uniforms which have been flagged for updating.
-		* 
-		* Running this every frame is more efficient than running it after every event.
-		*/
-		for (var key in Simulator.updates)
-		{
-			Simulator.updates[key] = false;
-		}
-
 		Simulator.updateCameraPosition();
 		
 		if (Simulator.mouseMoved)
@@ -102,6 +113,30 @@ class Simulator
 			{
 				Simulator.firstMouseMove = false;
 			}
+		}
+
+		if (Simulator.updates.juliaSeed)
+		{
+			Simulator.uniforms.juliaSeed.value = new THREE.Vector4(
+				Simulator.parameters.x, 
+				Simulator.parameters.y, 
+				Simulator.parameters.z,
+				Simulator.parameters.w
+			);
+
+			Simulator.uniforms.plane.value = Simulator.parameters.p;
+			}
+
+		/**
+		* Simulator.updates flags which uniforms need to be updated each frame
+		* This method runs through that dictionary and updates the shader
+		* uniforms which have been flagged for updating.
+		* 
+		* Running this every frame is more efficient than running it after every event.
+		*/
+		for (var key in Simulator.updates)
+		{
+			Simulator.updates[key] = false;
 		}
 	}
 	
@@ -191,7 +226,8 @@ class Simulator
 		}
 	}
 
-	static mouseClick(event)
+	// TODO: figure out mouse dragging bug when changing parameters with GUI
+	static mouseUp(event)
 	{
 		// click the mouse to have the camera follow/unfollow the mouse
 		Simulator.trackMouse = !Simulator.trackMouse;
@@ -215,6 +251,11 @@ class Simulator
 		{
 			Simulator.keyTracker[event.key] = false;
 		}
+	}
+
+	static changeParams()
+	{
+		Simulator.updates.juliaSeed = true;
 	}
 }
 
