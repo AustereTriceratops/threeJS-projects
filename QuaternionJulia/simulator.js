@@ -32,7 +32,7 @@ class Simulator
 	static cameraX = new THREE.Vector3(-0.61, 0.0, -0.79);
 	static cameraY = new THREE.Vector3(-0.79, 0.0, 0.61);
 	static cameraZ = new THREE.Vector3(0.0, 1.0, 0.0);
-	static cameraPos = new THREE.Vector3(1.15, -0.21, -1.2);
+	static cameraPos = new THREE.Vector3(1.15, 0.11, -1.2);
 	
 	//Coordinate data
 	static globalX = new THREE.Vector3(1.0, 0.0, 0.0);
@@ -147,32 +147,32 @@ class Simulator
 	{
 		if (Simulator.keyTracker["w"])
 		{
-			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01);
+			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.add(cameraYDirection);
 		}
 		if (Simulator.keyTracker["a"])
 		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01);
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.sub(cameraXDirection);
 		}
 		if (Simulator.keyTracker["s"])
 		{
-			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.01);
+			var cameraYDirection = Simulator.cameraY.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.sub(cameraYDirection);
 		}
 		if (Simulator.keyTracker["d"])
 		{
-			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.01);
+			var cameraXDirection = Simulator.cameraX.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.add(cameraXDirection);
 		}
 		if (Simulator.keyTracker[" "])
 		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01);
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.add(cameraZDirection);
 		}
 		if (Simulator.keyTracker["Shift"])
 		{
-			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.01);
+			var cameraZDirection = Simulator.cameraZ.clone().multiplyScalar(0.02);
 			Simulator.cameraPos.sub(cameraZDirection);
 		}
 	}
