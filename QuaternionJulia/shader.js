@@ -9,8 +9,6 @@ precision highp float;
 // include uniforms
 uniform vec2 res;
 uniform float aspect;
-uniform float zoom;
-uniform vec2 offset;
 
 // camera rotation
 uniform vec3 cameraX;
@@ -132,7 +130,7 @@ vec2 to0Pos1( vec2 v )
 vec2 toNeg1Pos1( vec2 v )
 {
   vec2 w = to0Pos1(v);
-  return vec2(2.0*(w.x - 0.5*aspect), 2.0*(w.y - 0.5));
+  return vec2(2.0*w.x - aspect, 2.0*w.y - 1.0);
 }
 
 // maps p in interval a to interval b

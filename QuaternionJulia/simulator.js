@@ -5,7 +5,6 @@ class Simulator
 	// GLOBALS ================================================
 	// screen data
 	static aspect = window.innerWidth / window.innerHeight;
-	static offset = new THREE.Vector2(-0.50*Simulator.aspect, -0.5);
 	
 	// TODO: move mouse to another class
 	// mouse data
@@ -59,7 +58,6 @@ class Simulator
 	static uniforms = {
 		res: {type: 'vec2', value: new THREE.Vector2(window.innerWidth, window.innerHeight)},
 		aspect: {type: 'float', value: Simulator.aspect},
-		offset: {type: 'float', value: Simulator.offset},
 		cameraX: {type: 'vec3', value: Simulator.cameraX},
 		cameraY: {type: 'vec3', value: Simulator.cameraY},
 		cameraZ: {type: 'vec3', value: Simulator.cameraZ},
@@ -80,9 +78,7 @@ class Simulator
 		document.body.appendChild( Simulator.renderer.domElement );
 
 		Simulator.updates = {
-			res: false,
 			aspect: false,
-			offset: false,
 			juliaSeed: false,
 		};
 	}
@@ -125,7 +121,13 @@ class Simulator
 			);
 
 			Simulator.uniforms.plane.value = Simulator.parameters.p;
-			}
+		}
+
+		if (Simulator.updates.aspect)
+		{
+			Simulator.uniforms.res.value = new THREE.Vector2(window.innerWidth, window.innerHeight);
+			Simulator.uniforms.aspect.value = window.innerWidth / window.innerHeight;
+		}
 
 		/**
 		* Simulator.updates flags which uniforms need to be updated each frame
@@ -207,11 +209,12 @@ class Simulator
 	// EVENTS ================================================
 	static windowResize()
 	{
-		// TODO: aspect should be passed to shader camera, not the "real" camera
 		Simulator.aspect = window.innerWidth / window.innerHeight;
-		Simulator.camera.aspect =  Simulator.aspect;
+		Simulator.camera.aspect = Simulator.aspect;
 		Simulator.camera.updateProjectionMatrix();
 		Simulator.renderer.setSize( window.innerWidth, window.innerHeight-2);
+
+		Simulator.updates.aspect = true;
 	}
 
 	static mouseMove(event)
