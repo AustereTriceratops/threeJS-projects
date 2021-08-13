@@ -74,7 +74,7 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
   // get vector from Julia set's center to real space
   vec3 p = ray - center;
 
-  vec4 q = vec4( p, plane );
+  vec4 q = vec4( p.z, p.y, p.x, plane );
   vec4 dq = vec4( 1.0, 0.0, 0.0, 0.0 );
 
   iterateIntersect( q, dq, c );
@@ -148,7 +148,7 @@ var shaderMain = `
 // gl_FragCoord in [0,1]
 void main()
 {
-  vec3 color = vec3(0.79, 0.75, 0.76);
+  vec3 color = vec3(1.0, 1.0, 1.0);
   vec2 uv = toNeg1Pos1(gl_FragCoord.xy);
 
   // get pxl real space as if camera is centered at origin
@@ -169,7 +169,7 @@ void main()
 
     if (radius < 0.001)
     {
-      color = vec3(0.51, 0.68, 0.35);
+      color = vec3(0.84, 0.46, 0.58);
 
       vec3 normal = estimateJuliaNormal(ray, juliaCenter, juliaSeed);
       float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
