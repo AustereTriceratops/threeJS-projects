@@ -158,6 +158,7 @@ void main()
 
   // ====================
   vec3 juliaCenter = vec3(0.0, 0.0, 0.0);
+  vec3 lightNorm = vec3(0.7071, 0.0, 0.7071);
   // ====================
 
   // raymarch for 120 iterations
@@ -170,8 +171,17 @@ void main()
       color = vec3(0.84, 0.46, 0.58);
 
       vec3 normal = estimateJuliaNormal(ray, juliaCenter, juliaSeed);
-      float fac = dot(normal, vec3(0.7071, 0.0, 0.7071));
-      color = pow(color, vec3(1.3 - fac, 1.3 - fac, 1.3 - fac));
+
+      // facs will be in interval [-1, 1]
+      float fac_d = dot(normal, lightNorm);
+      float fac_s = max(0.0, dot(ray_norm, lightNorm));
+
+      // 0.0: total light (i.e white)
+      // 1.0: lighting unchanged
+      // >1.0: darkened
+      float lightExponent = 0.6*(fac_d-1.0)*(fac_d-1.0) + 0.4 - 0.4*pow(fac_s, 8.0);
+
+      color = pow(color, vec3(lightExponent, lightExponent, lightExponent));
       
       break;
     }
