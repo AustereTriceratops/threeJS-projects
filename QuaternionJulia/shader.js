@@ -79,7 +79,7 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
 
   float x =  dot( q, q );
   float y = dot( dq, dq );
-  dist = 0.39 * sqrt( x / y ) * log( x );
+  dist = 0.4 * sqrt( x / y ) * log( x );
 
   return dist;
 }
@@ -161,12 +161,14 @@ void main()
   vec3 lightNorm = vec3(0.7071, 0.0, 0.7071);
   // ====================
 
+  int RAYMARCHING_ITERATIONS = 120;
+
   // raymarch for 120 iterations
-  for (int i = 0; i < 100; i++)
+  for (int i = 0; i < RAYMARCHING_ITERATIONS; i++)
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    if (radius < 0.001)
+    if (radius < 0.0005)
     {
       color = vec3(0.84, 0.46, 0.58);
 
@@ -179,9 +181,13 @@ void main()
       // 0.0: total light (i.e white)
       // 1.0: lighting unchanged
       // >1.0: darkened
-      float lightExponent = 0.6*(fac_d-1.0)*(fac_d-1.0) + 0.4 - 0.4*pow(fac_s, 8.0);
+      float lightExponent = 0.6*(1.0 - fac_d)*(1.0 - fac_d) + 0.4;
+      //float lightExponent = 1.0;
 
-      color = pow(color, vec3(lightExponent, lightExponent, lightExponent));
+      // ambient occlusion
+      lightExponent += 4.0*float(i)/float(RAYMARCHING_ITERATIONS);
+
+      color = pow(color, vec3(2.0*lightExponent - 1.0, 1.1*lightExponent, 0.5*lightExponent + 0.1));
       
       break;
     }
