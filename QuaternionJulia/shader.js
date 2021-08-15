@@ -49,7 +49,7 @@ vec4 quatSq( vec4 q )
 // dp: derivative estimate
 void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
-  for( int i=0; i<20; i++ )
+  for( int i=0; i<25; i++ )
   {
     dq = 2.0 * quaternionMult(q, dq);
     q = quatSq(q) + c;
@@ -146,8 +146,10 @@ var shaderMain = `
 // gl_FragCoord in [0,1]
 void main()
 {
-  vec3 color = vec3(1.0, 1.0, 1.0);
   vec2 uv = toNeg1Pos1(gl_FragCoord.xy);
+
+  // white background
+  vec3 color = vec3(1.0, 1.0, 1.0);
 
   // get pxl real space as if camera is centered at origin
   vec3 pxl = uv.x * cameraX + cameraY + uv.y * cameraZ;
@@ -162,13 +164,16 @@ void main()
   // ====================
 
   int RAYMARCHING_ITERATIONS = 120;
+  float distance = 0.0;
 
   // raymarch for 120 iterations
   for (int i = 0; i < RAYMARCHING_ITERATIONS; i++)
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    if (radius < 0.0005)
+    float r_min = 0.0005 + 0.002*distance*distance;
+
+    if (radius < r_min)
     {
       color = vec3(0.84, 0.46, 0.58);
 
@@ -198,6 +203,7 @@ void main()
     }
 
     ray += radius * ray_norm;
+    distance += radius;
   }
 
   gl_FragColor = vec4(color, 1.0);
