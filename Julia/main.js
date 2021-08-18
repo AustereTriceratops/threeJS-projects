@@ -26,7 +26,7 @@ function init() {
     aspect: {type: 'float', value: aspect},
     zoom: {type:'float', value: zoom},
     offset: {type:'vec2', value: offset},
-    c: {type:'vec3', value: new THREE.Vector2(0.28, 0.00)},
+    c: {type:'vec3', value: new THREE.Vector2(-0.777, -0.239)},
   };
 
   geometry = new THREE.PlaneBufferGeometry(2, 2);
@@ -79,24 +79,26 @@ vec2 conj (vec2 a){
 
 float julia(vec2 z, vec2 c){
   float alpha = 1.0;
-  vec2 z_0;
+  vec2 z_n;
+  vec2 z_n_1;
 
   for(int i=0; i < 150; i++){  // i < max iterations
-    z_0 = z;
+    z_n_1 = z_n;
+    z_n = z;
 
-    float x_0_sq = z_0.x*z_0.x;
-    float y_0_sq = z_0.y*z_0.y;
-    vec2 z_0_sq = vec2(x_0_sq - y_0_sq, 2.0*z_0.x*z_0.y);
+    float x_n_sq = z_n.x*z_n.x;
+    float y_n_sq = z_n.y*z_n.y;
+    vec2 z_n_sq = vec2(x_n_sq - y_n_sq, 2.0*z_n.x*z_n.y);
 
     // the recurrence equation
-    z = cm(z_0_sq, z_0_sq) - z_0_sq + c;
+    z = z_n_sq + c;
 
 
     float z_mag = z.x*z.x + z.y*z.y;
-    float z_0_mag = x_0_sq + y_0_sq;
+    float z_n_mag = x_n_sq + y_n_sq;
 
-    if(z_mag > 4.0){
-      float frac = (4.0 - z_0_mag) / (z_mag - z_0_mag);
+    if(z_mag > 8.0){
+      float frac = (4.0 - z_n_mag) / (z_mag - z_n_mag);
       alpha = (float(i) + frac)/150.0; // should be same as max iterations
       break;
     }
@@ -165,7 +167,7 @@ function scroll(event){
 function setMouseCoords(event){  //
   mouseX = zoom*aspect*event.clientX / width + offset.x;
   mouseY = zoom*event.clientY / height + offset.y;
-  mouseCoords = new THREE.Vector2(mouseX, mouseY)
+  mouseCoords = new THREE.Vector2(mouseX, mouseY);
 }
 
 function mouseDown(){

@@ -51,8 +51,8 @@ void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
   for( int i=0; i<25; i++ )
   {
-    dq = 2.0 * quaternionMult(q, dq);
-    q = quatSq(q) + c;
+    dq = 2.0 * quaternionMult(q, dq) + dq;
+    q = quatSq(q) + q + c;
 
     if( dot( q, q ) > 100.0 )
     {
