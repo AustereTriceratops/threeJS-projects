@@ -104,21 +104,6 @@ vec3 estimateJuliaNormal( vec3 ray, vec3 center, vec4 c )
 }
 `
 
-var signedDistanceFunctions = `
-// SDF FUNCTIONS ===================
-float sdSphere( vec3 ray, vec3 center, float s )
-{
-  return length(ray - center) - s;
-}
-
-float sdSquare( vec3 ray, vec3 center, float s )
-{
-  vec3 p = abs(ray - center);
-  vec3 q = p - vec3(s, s, s);
-  return length(max(q,0.0)) + min(max(q.x,max(q.y,q.z)),0.0);
-}
-`
-
 var coordinateTransforms =
 `
 // COORDINATE TRANSFORMS ===========
