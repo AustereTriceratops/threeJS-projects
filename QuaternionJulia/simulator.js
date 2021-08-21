@@ -1,5 +1,3 @@
-// TODO: make singleton
-// TODO: add docstrings
 class Simulator
 {
 	// GLOBALS ================================================
