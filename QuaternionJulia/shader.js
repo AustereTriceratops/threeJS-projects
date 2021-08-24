@@ -49,7 +49,7 @@ vec4 quatSq( vec4 q )
 // dp: derivative estimate
 void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
-  for( int i=0; i<25; i++ )
+  for( int i=0; i<20; i++ )
   {
     dq = 2.0 * quaternionMult(q, dq) + dq;
     q = quatSq(q) + q + c;
@@ -156,7 +156,7 @@ void main()
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    float r_min = 0.0005 + 0.002*distance*distance;
+    float r_min = 0.008 + 0.002*distance*distance;
 
     if (radius < r_min)
     {
@@ -182,7 +182,7 @@ void main()
       break;
     }
 
-    if (radius > 5.0)
+    if (distance > 5.0)
     {
       break;
     }
@@ -195,6 +195,6 @@ void main()
 }
 `
 
-var fragmentShader = setup + signedDistanceFunctions + quaternions + coordinateTransforms + shaderMain;
+var fragmentShader = setup + quaternions + coordinateTransforms + shaderMain;
 
 export {fragmentShader};
