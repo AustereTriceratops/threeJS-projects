@@ -49,7 +49,7 @@ vec4 quatSq( vec4 q )
 // dp: derivative estimate
 void iterateIntersect( inout vec4 q, inout vec4 dq, vec4 c)
 {
-  for( int i=0; i<20; i++ )
+  for( int i=0; i<25; i++ )
   {
     dq = 2.0 * quaternionMult(q, dq) + dq;
     q = quatSq(q) + q + c;
@@ -79,7 +79,7 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
 
   float x =  dot( q, q );
   float y = dot( dq, dq );
-  dist = 0.4 * sqrt( x / y ) * log( x );
+  dist = 0.2 * sqrt( x / y ) * log( x );
 
   return dist;
 }
@@ -87,7 +87,7 @@ float JuliaSDF( vec3 ray, vec3 center, vec4 c )
 
 vec3 estimateJuliaNormal( vec3 ray, vec3 center, vec4 c )
 {
-  float delta = 0.0001;
+  float delta = 0.0005;
   float ref = JuliaSDF(ray, center, c);
 
   vec2 h = vec2( delta, 0 );
@@ -148,7 +148,7 @@ void main()
   vec3 lightNorm = vec3(0.7071, 0.0, 0.7071);
   // ====================
 
-  int RAYMARCHING_ITERATIONS = 120;
+  int RAYMARCHING_ITERATIONS = 150;
   float distance = 0.0;
 
   // raymarch for 120 iterations
@@ -156,7 +156,7 @@ void main()
   {
     float radius = JuliaSDF(ray, juliaCenter, juliaSeed);
 
-    float r_min = 0.008 + 0.002*distance*distance;
+    float r_min = 0.0005 + 0.001*distance*distance;
 
     if (radius < r_min)
     {
