@@ -19,11 +19,20 @@ uniform float x_0;
 var palette = 
 `
 // RGB
-// 26, 72, 97
-// 197, 27, 180
-// 0, 224, 187
-// 241, 214, 184
-// 251, 172, 190
+// 26, 72, 97 (0.102, 0.2824, 0.3804)
+vec3 color1 = vec3(0.102, 0.2824, 0.3804);
+
+// 197, 27, 180 (0.773, 0.106, 0.706)
+vec3 color2 = vec3(0.773, 0.106, 0.706);
+
+// 0, 224, 187 (0.0, 0.878, 0.733)
+vec3 color3 = vec3(0.0, 0.878, 0.733);
+
+// 241, 214, 184 (0.945, 0.839, 0.722)
+vec3 color4 = vec3(0.945, 0.839, 0.722);
+
+// 251, 172, 190 (0.984, 0.675, 0.745)
+vec3 color5 = vec3(0.984, 0.675, 0.745);
 `
 
 var coordinateTransforms =
@@ -49,8 +58,15 @@ float toInterval( vec2 a, vec2 b, float p )
 }
 `
 
+var complexNumbers =
+`
+// COMPLEX NUMBERS ===========
+`
+
 var newtonFractal = 
 `
+// FRACTAL RENDERING FUNCTIONS ===========
+
 float julia(vec2 z, vec2 c){
   float alpha = 1.0;
   vec2 z_n;
@@ -80,6 +96,16 @@ float julia(vec2 z, vec2 c){
 
   return alpha;
 }
+
+float newtonsMethod(vec3 coeffs1, vec3 coeffs2, vec2 start)
+{
+  return 1.0;
+}
+
+float newtonFractal(vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
+{
+  return 1.0;
+}
 `
 
 var shaderMain = `
@@ -92,7 +118,8 @@ void main()
   // coordinates of pixel on plane
   vec2 pxl = (zoom * uv) + offset;
 
-  float s = abs(1.0 - julia(pxl, vec2(-0.7, 0.12)));
+  //float s = abs(1.0 - julia(pxl, vec2(-0.7, 0.12)));
+  float s = 0.9;
 
   vec3 coord = vec3(s, s, s);
   gl_FragColor = vec4(pow(coord, vec3(2.3, 6.15, 3.85)), 1.0);

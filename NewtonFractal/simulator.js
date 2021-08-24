@@ -100,6 +100,7 @@ class Simulator
 
 		if (Simulator.updates.polynomial)
 		{
+			// set polynomial coefficients
 			Simulator.uniforms.x_5 = Simulator.parameters.x_5;
 			Simulator.uniforms.x_4 = Simulator.parameters.x_4;
 			Simulator.uniforms.x_3 = Simulator.parameters.x_3;
@@ -114,10 +115,30 @@ class Simulator
 			let x_1 = Simulator.uniforms.x_1;
 			let x_0 = Simulator.uniforms.x_0;
 
-			let roots = findRoots([x_0, x_1, x_2, x_3, x_4, x_5]);
+			let polynomial = [x_0, x_1, x_2, x_3, x_4, x_5];
+
+			// remove high-order terms with 0 coefficients
+			// e.g. (1 - 0*x + 0.4*x^2 + 0*x^3 + 0*x^4) becomes (1 - 0*x + 0.4*x^2)
+			for (let i = 5; i > 0; i--)
+			{
+				if (Math.abs(polynomial[i]) < 0.00001)
+				{
+					polynomial.pop();
+				}
+				else
+				{
+					break;
+				}
+			}
+
+			let order = polynomial.length - 1;
+
+			let roots = findRoots(polynomial);
+
+			// transpose root array from 2xN to Nx2
 			let rootsT = [];
 
-			for (let i = 0; i < 5; ++i)
+			for (let i = 0; i < order; ++i)
 			{
 				rootsT.push([roots[0][i], roots[1][i]]);
 			}
