@@ -61,6 +61,35 @@ float toInterval( vec2 a, vec2 b, float p )
 var complexNumbers =
 `
 // COMPLEX NUMBERS ===========
+
+vec2 complexConjugation( vec2 a )
+{
+  return vec2( a.x, -a.y );
+}
+
+float complexMagnitude( vec2 a )
+{
+  return a.x*a.x + a.y*a.y;
+}
+
+vec2 complexMultiplication( vec2 a, vec2 b)
+{
+  return vec2(a.x*b.x - a.y*b.y, a.x*b.y + a.y*b.x);
+}
+
+// evaluates a/b = ab*/|b|^2
+vec2 complexDivision( vec2 a, vec2 b )
+{
+  vec2 bConj = complexConjugation( b );
+  float bMag = complexMagnitude( b );
+
+  return complexMultiplication( a, bConj ) / bMag;
+}
+
+vec2 complexSq( vec2 a )
+{
+  return vec2( a.x*a.x - a.y*a.y, 2.0*a.x*a.y );
+}
 `
 
 var newtonFractal = 
