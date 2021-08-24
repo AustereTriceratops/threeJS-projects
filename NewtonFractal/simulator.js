@@ -41,6 +41,7 @@ class Simulator
 		x_2: { value: Simulator.parameters.x_2 },
 		x_1: { value: Simulator.parameters.x_1 },
 		x_0: { value: Simulator.parameters.x_0 },
+		order: { value: 5 },
 	};
 	
 	// THREE.js objects
@@ -132,6 +133,8 @@ class Simulator
 			}
 
 			let order = polynomial.length - 1;
+
+			Simulator.uniforms.order = order;
 
 			let roots = findRoots(polynomial);
 

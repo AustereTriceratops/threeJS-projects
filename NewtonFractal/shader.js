@@ -14,6 +14,8 @@ uniform float x_3;
 uniform float x_2;
 uniform float x_1;
 uniform float x_0;
+
+uniform int order;
 `
 
 var palette = 
@@ -126,9 +128,22 @@ float julia(vec2 z, vec2 c){
   return alpha;
 }
 
-float newtonsMethod(vec3 coeffs1, vec3 coeffs2, vec2 start)
+vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
 {
-  return 1.0;
+  vec2 x = start;
+  vec2 x2 = complexSq( x );
+  vec2 x3 = complexMultiplication( x, x2 );
+  vec2 x4 = complexSq( x2 );
+  vec2 x5 = complexMultiplication( x, x4 );
+
+  // calculate value of polynomial and its gradient at x 
+  vec2 f = coeffs1.x + coeffs1.y*x + coeffs1.z*x2 + coeffs2.x*x3 + coeffs2.y*x4 + coeffs2.z*x5;
+  vec2 fGrad = coeffs1.y + 2.0*coeffs1.z*x + 3.0*coeffs2.x*x2 + 4.0*coeffs2.y*x3 + 5.0*coeffs2.z*x4;
+
+  // calculate the step
+  vec2 step = complexDivision(f, fGrad);
+
+  return x - step;
 }
 
 float newtonFractal(vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
@@ -155,6 +170,6 @@ void main()
 }
 `
 
-var fragmentShader = setup + palette + coordinateTransforms + newtonFractal + shaderMain;
+var fragmentShader = setup + palette + coordinateTransforms + complexNumbers + newtonFractal + shaderMain;
 
 export {fragmentShader};
