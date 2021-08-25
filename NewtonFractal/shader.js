@@ -16,6 +16,10 @@ uniform float x_1;
 uniform float x_0;
 
 uniform int order;
+
+// Constants
+int MAX_ITERATIONS = 50;
+float CUTOFF = 0.001;
 `
 
 var palette = 
@@ -103,7 +107,7 @@ var newtonFractal =
 `
 // FRACTAL RENDERING FUNCTIONS ===========
 
-vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
+vec2 newtonsMethodStep(vec2 start, vec3 coeffs1, vec3 coeffs2 )
 {
   vec2 x = start;
   vec2 x2 = complexSq( x );
@@ -121,23 +125,22 @@ vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
   return x - step;
 }
 
-vec3 newtonFractal(vec2 p, vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
+vec3 newtonFractal(vec2 start, vec3 coeffs1, vec3 coeffs2 )
 {
-  int MAX_ITERATIONS = 50;
-  vec2 point = p;
+  vec2 point = start;
+  vec2 pointPrev;
   vec3 result = vec3(0.0, 0.0, 0.0);
 
   for (int i = 0; i < MAX_ITERATIONS; ++i)
   {
-    point = newtonsMethodStep( coeffs1, coeffs2, point);
+    pointPrev = point;
+    point = newtonsMethodStep( point, coeffs1, coeffs2 );
 
-    if ( complexMagnitude(point - root1) < 0.4 )
+    if ( complexMagnitudeSq(point - pointPrev) < CUTOFF )
     {
-      //float scale = float(i) / float(MAX_ITERATIONS);
-      float scale = float(i);
-      result = pow( color4, vec3(scale, scale, scale) ) ;
-      //result = pow( color1, vec3(scale, scale, scale) );
-      //result = vec3(scale, scale, scale);
+      float fac = float(i);
+      result = pow( color4, vec3(fac, fac, fac) );
+      
       break;
     }
   }
@@ -155,20 +158,24 @@ void main()
 
   // coordinates of pixel on plane
   vec2 pxl = (zoom * uv) + offset;
+  
+  // fudge factor to pre-rotate pixel coordinate since otherwise the fractal will look rotated
+  // I have NO idea why this needs to be here
+  pxl = complexMultiplication( pxl, vec2(0.96593, 0.25882) );
 
   // ===========
-  vec3 coeffs1 = vec3( -1.0, 0.0, 0.0 );
+  vec3 coeffs1 = vec3( 1.0, 0.0, 0.0 );
   vec3 coeffs2 = vec3( 1.0, 0.0, 0.0 );
 
-  vec2 root1 = vec2( 1.0, 0.0 );
-  vec2 root2 = vec2( -0.5, 0.86603);
-  vec2 root3 = vec2( -0.5, -0.86603);
-  vec2 root4 = vec2( 0.0, 0.0 );
-  vec2 root5 = vec2( 0.0, 0.0 );
+  // vec2 root1 = vec2( 1.0, 0.0 );
+  // vec2 root2 = vec2( -0.5, 0.86603);
+  // vec2 root3 = vec2( -0.5, -0.86603);
+  // vec2 root4 = vec2( 0.0, 0.0 );
+  // vec2 root5 = vec2( 0.0, 0.0 );
 
 
   // Run newton's method
-  vec3 color = newtonFractal( pxl, coeffs1, coeffs2, root1, root2, root3, root4, root5, 3 );
+  vec3 color = newtonFractal( pxl, coeffs1, coeffs2 );
 
   gl_FragColor = vec4( color, 1.0 );
 }
