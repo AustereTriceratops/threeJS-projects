@@ -69,9 +69,14 @@ vec2 complexConjugation( vec2 a )
   return vec2( a.x, -a.y );
 }
 
-float complexMagnitude( vec2 a )
+float complexMagnitudeSq( vec2 a )
 {
   return a.x*a.x + a.y*a.y;
+}
+
+float complexMagnitude( vec2 a )
+{
+  return pow( complexMagnitudeSq(a), 0.5 );
 }
 
 vec2 complexMultiplication( vec2 a, vec2 b)
@@ -83,7 +88,7 @@ vec2 complexMultiplication( vec2 a, vec2 b)
 vec2 complexDivision( vec2 a, vec2 b )
 {
   vec2 bConj = complexConjugation( b );
-  float bMag = complexMagnitude( b );
+  float bMag = complexMagnitudeSq( b );
 
   return complexMultiplication( a, bConj ) / bMag;
 }
@@ -118,23 +123,21 @@ vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
 
 vec3 newtonFractal(vec2 p, vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
 {
-  int MAX_ITERATIONS = 20;
+  int MAX_ITERATIONS = 50;
   vec2 point = p;
-  vec3 result = vec3(1.0, 1.0, 1.0);
+  vec3 result = vec3(0.0, 0.0, 0.0);
 
   for (int i = 0; i < MAX_ITERATIONS; ++i)
   {
     point = newtonsMethodStep( coeffs1, coeffs2, point);
-    
-    // if ( abs(point.x - root1.x) < 0.1 && abs(point.y - root1.y) < 0.1 )
-    // {
-    //   result = color5;
-    // }
-    if ( (abs(point.x - root1.x) > 0.01) && (abs(point.y - root1.y) < 0.01) )
+
+    if ( complexMagnitude(point - root1) < 0.4 )
     {
       //float scale = float(i) / float(MAX_ITERATIONS);
-      //result = pow( color4, vec3(scale, scale, scale) );
-      result = color1.xyz;
+      float scale = float(i);
+      result = pow( color4, vec3(scale, scale, scale) ) ;
+      //result = pow( color1, vec3(scale, scale, scale) );
+      //result = vec3(scale, scale, scale);
       break;
     }
   }
@@ -165,7 +168,6 @@ void main()
 
 
   // Run newton's method
-  //vec3 color = vec3(1.0, 1.0, 1.0);
   vec3 color = newtonFractal( pxl, coeffs1, coeffs2, root1, root2, root3, root4, root5, 3 );
 
   gl_FragColor = vec4( color, 1.0 );
