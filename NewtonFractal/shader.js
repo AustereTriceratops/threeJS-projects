@@ -98,36 +98,6 @@ var newtonFractal =
 `
 // FRACTAL RENDERING FUNCTIONS ===========
 
-float julia(vec2 z, vec2 c){
-  float alpha = 1.0;
-  vec2 z_n;
-  vec2 z_n_1;
-
-  for(int i=0; i < 70; i++){  // i < max iterations
-    z_n_1 = z_n;
-    z_n = z;
-
-    float x_n_sq = z_n.x*z_n.x;
-    float y_n_sq = z_n.y*z_n.y;
-    vec2 z_n_sq = vec2(x_n_sq - y_n_sq, 2.0*z_n.x*z_n.y);
-
-    // the recurrence equation
-    z = z_n_sq + c;
-
-
-    float z_mag = z.x*z.x + z.y*z.y;
-    float z_n_mag = x_n_sq + y_n_sq;
-
-    if(z_mag > 8.0){
-      float frac = (4.0 - z_n_mag) / (z_mag - z_n_mag);
-      alpha = (float(i) + frac)/150.0; // should be same as max iterations
-      break;
-    }
-  }
-
-  return alpha;
-}
-
 vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
 {
   vec2 x = start;
@@ -146,9 +116,30 @@ vec2 newtonsMethodStep(vec3 coeffs1, vec3 coeffs2, vec2 start)
   return x - step;
 }
 
-float newtonFractal(vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
+vec3 newtonFractal(vec2 p, vec3 coeffs1, vec3 coeffs2, vec2 root1, vec2 root2, vec2 root3, vec2 root4, vec2 root5, int order)
 {
-  return 1.0;
+  int MAX_ITERATIONS = 20;
+  vec2 point = p;
+  vec3 result = vec3(1.0, 1.0, 1.0);
+
+  for (int i = 0; i < MAX_ITERATIONS; ++i)
+  {
+    point = newtonsMethodStep( coeffs1, coeffs2, point);
+    
+    // if ( abs(point.x - root1.x) < 0.1 && abs(point.y - root1.y) < 0.1 )
+    // {
+    //   result = color5;
+    // }
+    if ( (abs(point.x - root1.x) > 0.01) && (abs(point.y - root1.y) < 0.01) )
+    {
+      //float scale = float(i) / float(MAX_ITERATIONS);
+      //result = pow( color4, vec3(scale, scale, scale) );
+      result = color1.xyz;
+      break;
+    }
+  }
+
+  return result;
 }
 `
 
@@ -162,11 +153,22 @@ void main()
   // coordinates of pixel on plane
   vec2 pxl = (zoom * uv) + offset;
 
-  //float s = abs(1.0 - julia(pxl, vec2(-0.7, 0.12)));
-  float s = 0.9;
+  // ===========
+  vec3 coeffs1 = vec3( -1.0, 0.0, 0.0 );
+  vec3 coeffs2 = vec3( 1.0, 0.0, 0.0 );
 
-  vec3 coord = vec3(s, s, s);
-  gl_FragColor = vec4(pow(coord, vec3(2.3, 6.15, 3.85)), 1.0);
+  vec2 root1 = vec2( 1.0, 0.0 );
+  vec2 root2 = vec2( -0.5, 0.86603);
+  vec2 root3 = vec2( -0.5, -0.86603);
+  vec2 root4 = vec2( 0.0, 0.0 );
+  vec2 root5 = vec2( 0.0, 0.0 );
+
+
+  // Run newton's method
+  //vec3 color = vec3(1.0, 1.0, 1.0);
+  vec3 color = newtonFractal( pxl, coeffs1, coeffs2, root1, root2, root3, root4, root5, 3 );
+
+  gl_FragColor = vec4( color, 1.0 );
 }
 `
 
