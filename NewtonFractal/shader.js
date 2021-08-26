@@ -164,9 +164,9 @@ void main()
   pxl = complexMultiplication( pxl, vec2(0.96593, 0.25882) );
 
   // ===========
-  vec3 coeffs1 = vec3( 1.0, 0.0, 0.0 );
-  vec3 coeffs2 = vec3( 1.0, 0.0, 0.0 );
-
+  vec3 coeffs1 = vec3( x_0, x_1, x_2 );
+  vec3 coeffs2 = vec3( x_3, x_4, x_5 );
+  
   // vec2 root1 = vec2( 1.0, 0.0 );
   // vec2 root2 = vec2( -0.5, 0.86603);
   // vec2 root3 = vec2( -0.5, -0.86603);

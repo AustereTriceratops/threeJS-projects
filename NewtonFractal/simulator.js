@@ -22,12 +22,12 @@ class Simulator
 
 	// data passed to shader
 	static parameters = {
-		x_5: 1.0,
-		x_4: 0.00,
-		x_3: 0.00,
-		x_2: 0.00,
-		x_1: 0.00,
-		x_0: -1.0,
+		x_5: 0.54,
+		x_4: 0.01,
+		x_3: 1.01,
+		x_2: 0.21,
+		x_1: 4.08,
+		x_0: -1.05,
 	}
 
 	static uniforms = {
@@ -102,12 +102,12 @@ class Simulator
 		if (Simulator.updates.polynomial)
 		{
 			// set polynomial coefficients
-			Simulator.uniforms.x_5 = Simulator.parameters.x_5;
-			Simulator.uniforms.x_4 = Simulator.parameters.x_4;
-			Simulator.uniforms.x_3 = Simulator.parameters.x_3;
-			Simulator.uniforms.x_2 = Simulator.parameters.x_2;
-			Simulator.uniforms.x_1 = Simulator.parameters.x_1;
-			Simulator.uniforms.x_0 = Simulator.parameters.x_0;
+			Simulator.uniforms.x_5.value = Simulator.parameters.x_5;
+			Simulator.uniforms.x_4.value = Simulator.parameters.x_4;
+			Simulator.uniforms.x_3.value = Simulator.parameters.x_3;
+			Simulator.uniforms.x_2.value = Simulator.parameters.x_2;
+			Simulator.uniforms.x_1.value = Simulator.parameters.x_1;
+			Simulator.uniforms.x_0.value = Simulator.parameters.x_0;
 
 			let x_5 = Simulator.uniforms.x_5;
 			let x_4 = Simulator.uniforms.x_4;
@@ -145,8 +145,6 @@ class Simulator
 			{
 				rootsT.push([roots[0][i], roots[1][i]]);
 			}
-
-			console.log(rootsT);
 		}
 
 		/**
