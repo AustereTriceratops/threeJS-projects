@@ -22,12 +22,12 @@ class Simulator
 
 	// data passed to shader
 	static parameters = {
-		x_5: 0.54,
-		x_4: 0.01,
-		x_3: 1.01,
-		x_2: 0.21,
-		x_1: 4.08,
-		x_0: -1.05,
+		x_5: 1.381,
+		x_4: 1.317,
+		x_3: 0.201,
+		x_2: 1.511,
+		x_1: -0.49,
+		x_0: -1.701,
 	}
 
 	static uniforms = {

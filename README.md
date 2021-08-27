@@ -41,3 +41,11 @@ Click [here](https://austeretriceratops.github.io/Julia/) to view.
 A raymarching-based interactive visualization of the Quaternion Julia fractal. You can move around with wasd keys as well as using shift+space for vertical movement. You may also click to toggle whether the camera follows your mouse. There's a GUI on the top right that lets you freely choose the parameters of the fractal. If you're interested in the details, I'm writing a post on my [blog](https://austeretriceratops.wordpress.com/) and on [Medium](https://medium.com/@SereneBiologist) that will be out soon.
 
 Click [here](https://austeretriceratops.github.io/QuaternionJulia/) to view.
+
+## Quintic Newton fractal
+
+![](https://pbs.twimg.com/media/E9wgVT4WEAEXh1i?format=jpg&name=large)
+
+A shader that renders the Newton fractals of quintic polynomials.
+
+Click [here](https://austeretriceratops.github.io/NewtonFractal/) to view.
