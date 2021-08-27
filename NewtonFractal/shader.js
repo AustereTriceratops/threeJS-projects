@@ -19,7 +19,7 @@ uniform int order;
 
 // Constants
 int MAX_ITERATIONS = 50;
-float CUTOFF = 0.001;
+float CUTOFF = 0.0001;
 `
 
 var palette = 
@@ -39,6 +39,9 @@ vec3 color4 = vec3(0.945, 0.839, 0.722);
 
 // 251, 172, 190 (0.984, 0.675, 0.745)
 vec3 color5 = vec3(0.984, 0.675, 0.745);
+
+
+vec3 color6 = vec3( 0.855, 0.694, 0.922 );
 `
 
 var coordinateTransforms =
@@ -127,6 +130,7 @@ vec2 newtonsMethodStep(vec2 start, vec3 coeffs1, vec3 coeffs2 )
 
 vec3 newtonFractal(vec2 start, vec3 coeffs1, vec3 coeffs2 )
 {
+  float fac = 100.0;
   vec2 point = start;
   vec2 pointPrev;
   vec3 result = vec3(0.0, 0.0, 0.0);
@@ -136,16 +140,16 @@ vec3 newtonFractal(vec2 start, vec3 coeffs1, vec3 coeffs2 )
     pointPrev = point;
     point = newtonsMethodStep( point, coeffs1, coeffs2 );
 
-    if ( complexMagnitudeSq(point - pointPrev) < CUTOFF )
+    float distSq = complexMagnitudeSq(point - pointPrev);
+
+    if ( distSq < CUTOFF )
     {
-      float fac = float(i);
-      result = pow( color4, vec3(fac, fac, fac) );
-      
+      fac = 30.0 * (float(i) + pow( distSq / CUTOFF , 2.0)) / float(MAX_ITERATIONS);
       break;
     }
   }
 
-  return result;
+  return vec3( point.xy, fac);
 }
 `
 
@@ -175,7 +179,20 @@ void main()
 
 
   // Run newton's method
-  vec3 color = newtonFractal( pxl, coeffs1, coeffs2 );
+  vec3 data = newtonFractal( pxl, coeffs1, coeffs2 );
+
+  vec2 endpoint = data.xy;
+  float fac = data.z;
+  vec3 color;
+
+  if ( endpoint.y > 0.0 )
+  {
+    color = pow( color4, vec3(fac, fac, fac) );
+  }
+  else
+  {
+    color = pow( color6, vec3(fac, fac, fac) );
+  }
 
   gl_FragColor = vec4( color, 1.0 );
 }
