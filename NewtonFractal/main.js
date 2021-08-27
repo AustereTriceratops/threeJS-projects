@@ -13,7 +13,7 @@ function main()
 	var gui = new dat.GUI({width: 250});
 	
 	for (var key in Simulator.parameters){
-	  gui.add(Simulator.parameters, key, -3.0, 3.0).onChange(Simulator.changeParams);
+	  gui.add(Simulator.parameters, key, -6.0, 6.0).onChange(Simulator.changeParams);
 	}
 
 	// create plane of shader
