@@ -173,7 +173,7 @@ var newtonFractal =
 `
 // FRACTAL RENDERING FUNCTIONS ===========
 
-vec2 newtonsMethodStep(vec2 start, vec3 coeffs1, vec3 coeffs2 )
+vec2 newtonsMethodStep(vec2 start, float[6] coeffs )
 {
   vec2 x = start;
   vec2 x2 = complexSq( x );
@@ -182,8 +182,8 @@ vec2 newtonsMethodStep(vec2 start, vec3 coeffs1, vec3 coeffs2 )
   vec2 x5 = complexMultiplication( x, x4 );
 
   // calculate value of polynomial and its gradient at x 
-  vec2 f = coeffs1.x + coeffs1.y*x + coeffs1.z*x2 + coeffs2.x*x3 + coeffs2.y*x4 + coeffs2.z*x5;
-  vec2 fGrad = coeffs1.y + 2.0*coeffs1.z*x + 3.0*coeffs2.x*x2 + 4.0*coeffs2.y*x3 + 5.0*coeffs2.z*x4;
+  vec2 f = coeffs[0] + coeffs[1]*x + coeffs[2]*x2 + coeffs[3]*x3 + coeffs[4]*x4 + coeffs[5]*x5;
+  vec2 fGrad = coeffs[1] + 2.0*coeffs[2]*x + 3.0*coeffs[3]*x2 + 4.0*coeffs[4]*x3 + 5.0*coeffs[5]*x4;
 
   // calculate the step
   vec2 step = complexDivision(f, fGrad);
@@ -191,7 +191,7 @@ vec2 newtonsMethodStep(vec2 start, vec3 coeffs1, vec3 coeffs2 )
   return x - step;
 }
 
-vec3 newtonFractal(vec2 start, vec3 coeffs1, vec3 coeffs2 )
+vec3 newtonFractal(vec2 start, float[6] coeffs )
 {
   float fac = 100.0;
   vec2 point = start;
@@ -201,7 +201,7 @@ vec3 newtonFractal(vec2 start, vec3 coeffs1, vec3 coeffs2 )
   for (int i = 0; i < MAX_ITERATIONS; ++i)
   {
     pointPrev = point;
-    point = newtonsMethodStep( point, coeffs1, coeffs2 );
+    point = newtonsMethodStep( point, coeffs );
 
     float distSq = complexMagnitudeSq(point - pointPrev);
 
@@ -232,12 +232,11 @@ void main()
   pxl = complexMultiplication( pxl, vec2(0.9808, 0.1951) );
 
   // ===========
-  vec3 coeffs1 = vec3( x_0, x_1, x_2 );
-  vec3 coeffs2 = vec3( x_3, x_4, x_5 );
+  float[] coeffs = float[6](x_0, x_1, x_2, x_3, x_4, x_5);
 
 
   // Run newton's method
-  vec3 data = newtonFractal( pxl, coeffs1, coeffs2 );
+  vec3 data = newtonFractal( pxl, coeffs );
 
   vec2 endpoint = data.xy;
   float fac = data.z / 14.0;
