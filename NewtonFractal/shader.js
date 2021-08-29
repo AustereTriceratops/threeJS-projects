@@ -175,20 +175,32 @@ var newtonFractal =
 
 vec2 newtonsMethodStep(vec2 start, float[6] coeffs )
 {
-  vec2 x = start;
-  vec2 x2 = complexSq( x );
-  vec2 x3 = complexMultiplication( x, x2 );
-  vec2 x4 = complexSq( x2 );
-  vec2 x5 = complexMultiplication( x, x4 );
+  vec2[6] x_powers;
+
+  x_powers[0] = vec2( 1.0, 0.0 );
+  x_powers[1] = start;
+  x_powers[2]  = complexSq( x_powers[1] );
+  x_powers[3] = complexMultiplication( x_powers[1], x_powers[2] );
+  x_powers[4] = complexSq( x_powers[2] );
+  x_powers[5] = complexMultiplication( x_powers[1], x_powers[4] );
 
   // calculate value of polynomial and its gradient at x 
-  vec2 f = coeffs[0] + coeffs[1]*x + coeffs[2]*x2 + coeffs[3]*x3 + coeffs[4]*x4 + coeffs[5]*x5;
-  vec2 fGrad = coeffs[1] + 2.0*coeffs[2]*x + 3.0*coeffs[3]*x2 + 4.0*coeffs[4]*x3 + 5.0*coeffs[5]*x4;
+  vec2 f, fGrad;
+
+  for (int i = 0; i < 6; ++i)
+  {
+    f += coeffs[i] * x_powers[i];
+  }
+
+  for (int i = 1; i < 6; ++i)
+  {
+    fGrad += float(i) * coeffs[i] * x_powers[i - 1];
+  }
 
   // calculate the step
   vec2 step = complexDivision(f, fGrad);
 
-  return x - step;
+  return start - step;
 }
 
 vec3 newtonFractal(vec2 start, float[6] coeffs )
@@ -196,7 +208,6 @@ vec3 newtonFractal(vec2 start, float[6] coeffs )
   float fac = 100.0;
   vec2 point = start;
   vec2 pointPrev;
-  vec3 result = vec3(0.0, 0.0, 0.0);
 
   for (int i = 0; i < MAX_ITERATIONS; ++i)
   {
@@ -207,11 +218,12 @@ vec3 newtonFractal(vec2 start, float[6] coeffs )
 
     if ( distSq < CUTOFF )
     {
-      fac = 30.0 * (float(i) + pow( distSq / CUTOFF , 2.0)) / float(MAX_ITERATIONS);
+      fac = ( float(i) + pow( distSq / CUTOFF , 2.0) ) / float(MAX_ITERATIONS);
       break;
     }
   }
 
+  // return the root's coordinates and the time to took to converge
   return vec3( point.xy, fac);
 }
 `
@@ -225,11 +237,6 @@ void main()
 
   // coordinates of pixel on plane
   vec2 pxl = (zoom * uv) + offset;
-  
-  // fudge factor to pre-rotate pixel coordinate since otherwise the fractal will look rotated
-  // I have NO idea why this needs to be here
-  //pxl = complexMultiplication( pxl, vec2(0.96593, 0.25882) );
-  pxl = complexMultiplication( pxl, vec2(0.9808, 0.1951) );
 
   // ===========
   float[] coeffs = float[6](x_0, x_1, x_2, x_3, x_4, x_5);
@@ -239,7 +246,7 @@ void main()
   vec3 data = newtonFractal( pxl, coeffs );
 
   vec2 endpoint = data.xy;
-  float fac = data.z / 14.0;
+  float fac = 2.0 * data.z;
 
   // Set color of pixel
   //vec3 color;
