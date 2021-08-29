@@ -74,6 +74,37 @@ vec3 plasma( float x )
 
   return color;
 }
+
+// magma colormap
+vec3 magma( float x )
+{
+    vec3 color = vec3(0.0, 0.0, 0.0);
+    x = max( x, 0.0);
+    x = min( x, 1.0);
+  
+    if (x < 0.25)
+    {
+      float s = 4.0 * x;
+      color = (1.0 - s) * vec3( 0.001462, 0.000466, 0.013866 ) + s*vec3( 0.316654, 0.07169, 0.48538 );
+    }
+    else if (x < 0.5)
+    {
+      float s = 4.0 * (x - 0.25);
+      color = (1.0 - s) * vec3( 0.316654, 0.07169, 0.48538 ) + s*vec3( 0.716387, 0.214982, 0.47529 );
+    }
+    else if (x < 0.75)
+    {
+      float s = 4.0 * (x - 0.5);
+      color = (1.0 - s) * vec3( 0.716387, 0.214982, 0.47529 ) + s*vec3( 0.9867, 0.535582, 0.38221 );
+    }
+    else if (x <= 1.0)
+    {
+      float s = 4.0 * (x - 0.75);
+      color = (1.0 - s) * vec3( 0.9867, 0.535582, 0.38221 ) + s*vec3( 0.987053, 0.991438, 0.749504 );
+    }
+  
+    return color;
+}
 `
 
 var coordinateTransforms =
@@ -203,23 +234,17 @@ void main()
   // ===========
   vec3 coeffs1 = vec3( x_0, x_1, x_2 );
   vec3 coeffs2 = vec3( x_3, x_4, x_5 );
-  
-  // vec2 root1 = vec2( 1.0, 0.0 );
-  // vec2 root2 = vec2( -0.5, 0.86603);
-  // vec2 root3 = vec2( -0.5, -0.86603);
-  // vec2 root4 = vec2( 0.0, 0.0 );
-  // vec2 root5 = vec2( 0.0, 0.0 );
 
 
   // Run newton's method
   vec3 data = newtonFractal( pxl, coeffs1, coeffs2 );
 
   vec2 endpoint = data.xy;
-  float fac = data.z / 15.0;
+  float fac = data.z / 14.0;
 
   // Set color of pixel
   //vec3 color;
-  vec3 color = plasma( fac );
+  vec3 color = magma( 1.0 - fac );
 
   // if ( endpoint.y > 0.0 )
   // {
