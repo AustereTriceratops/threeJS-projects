@@ -42,6 +42,38 @@ vec3 color5 = vec3(0.984, 0.675, 0.745);
 
 
 vec3 color6 = vec3( 0.855, 0.694, 0.922 );
+
+
+// imitation of matplotlib plasma colormap
+vec3 plasma( float x )
+{
+  vec3 color = vec3(0.0, 0.0, 0.0);
+  x = max( x, 0.0);
+  x = min( x, 1.0);
+
+  if (x < 0.25)
+  {
+    float s = 4.0 * x;
+    color = (1.0 - s) * vec3( 0.94, 0.975, 0.131 ) + s*vec3( 0.973416, 0.585761, 0.25154 );
+  }
+  else if (x < 0.5)
+  {
+    float s = 4.0 * (x - 0.25);
+    color = (1.0 - s) * vec3( 0.973416, 0.585761, 0.25154 ) + s*vec3( 0.798216, 0.280197, 0.469538 );
+  }
+  else if (x < 0.75)
+  {
+    float s = 4.0 * (x - 0.5);
+    color = (1.0 - s) * vec3( 0.798216, 0.280197, 0.469538 ) + s*vec3( 0.494877, 0.01199, 0.657865 );
+  }
+  else if (x <= 1.0)
+  {
+    float s = 4.0 * (x - 0.75);
+    color = (1.0 - s) * vec3( 0.494877, 0.01199, 0.657865 ) + s*vec3( 0.050383, 0.029803, 0.527975 );
+  }
+
+  return color;
+}
 `
 
 var coordinateTransforms =
@@ -165,7 +197,8 @@ void main()
   
   // fudge factor to pre-rotate pixel coordinate since otherwise the fractal will look rotated
   // I have NO idea why this needs to be here
-  pxl = complexMultiplication( pxl, vec2(0.96593, 0.25882) );
+  //pxl = complexMultiplication( pxl, vec2(0.96593, 0.25882) );
+  pxl = complexMultiplication( pxl, vec2(0.9808, 0.1951) );
 
   // ===========
   vec3 coeffs1 = vec3( x_0, x_1, x_2 );
@@ -182,17 +215,20 @@ void main()
   vec3 data = newtonFractal( pxl, coeffs1, coeffs2 );
 
   vec2 endpoint = data.xy;
-  float fac = data.z;
-  vec3 color;
+  float fac = data.z / 15.0;
 
-  if ( endpoint.y > 0.0 )
-  {
-    color = pow( color4, vec3(fac, fac, fac) );
-  }
-  else
-  {
-    color = pow( color6, vec3(fac, fac, fac) );
-  }
+  // Set color of pixel
+  //vec3 color;
+  vec3 color = plasma( fac );
+
+  // if ( endpoint.y > 0.0 )
+  // {
+  //   color = pow( color4, vec3(fac, fac, fac) );
+  // }
+  // else
+  // {
+  //   color = pow( color6, vec3(fac, fac, fac) );
+  // }
 
   gl_FragColor = vec4( color, 1.0 );
 }
