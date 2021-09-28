@@ -18,16 +18,16 @@ var k = 0.01;
 
 var aMin = -3.0
 var aMax = 3.0
-var aStep = 0.025
+var aStep = 0.02
 var bMin = -3.0
 var bMax = 3.0
-var bStep = 0.025
+var bStep = 0.02
 var cMin = -3.0
 var cMax = 3.0
-var cStep = 0.025
+var cStep = 0.02
 var dMin = -3.0
 var dMax = 3.0
-var dStep = 0.025
+var dStep = 0.02
 var kMin = 0
 var kMax = 0.4
 var kStep = 0.001
@@ -40,8 +40,8 @@ function attractor(){
 	var f=1;
 	var t = 0;
 	while (f<maxpoints){
-		x[f] = sin(a*y[f-1]) - cos(b*x[f-1]) + sin(t);
-		y[f] = sin(c*x[f-1]) - cos(d*y[f-1]) + cos(t);
+		x[f] = sin(a*y[f-1]) - cos(b*x[f-1]) 
+		y[f] = sin(c*x[f-1]) - cos(d*y[f-1])
 		t+=k;
 		f+=1;
 	}
