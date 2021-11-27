@@ -115,9 +115,15 @@ class Line{
     let hitbox_mat = new THREE.MeshBasicMaterial(
       {color: this.color, opacity:0, transparent:true, side:THREE.DoubleSide});
 
-    let fill_geom = new THREE.Geometry();
-    fill_geom.vertices = points;
-    fill_geom.faces.push(new THREE.Face3(0, 2, 1), new THREE.Face3(1,2,3));
+	let fill_geom = new THREE.BufferGeometry();
+
+	const faces = [
+				points[0], points[1], points[2],
+				points[0], points[2], points[3]
+	];
+
+	fill_geom.setFromPoints(points);
+
     this.hitbox = new THREE.Mesh(fill_geom, hitbox_mat);
     sceneUI.add(this.hitbox);
   }
@@ -181,17 +187,25 @@ class Rect{
 
   createGeometry(){
     if (this.outlined){
-      let mat = new THREE.LineBasicMaterial({color: this.color});
-      let geom = new THREE.BufferGeometry().setFromPoints(this.points);
-      this.outline = new THREE.Line(geom, mat);
+		let mat = new THREE.LineBasicMaterial({color: this.color});
+		let geom = new THREE.BufferGeometry().setFromPoints(this.points);
+		this.outline = new THREE.Line(geom, mat);
     }
 
     let fill_mat = new THREE.MeshBasicMaterial(
-      {color: this.fill_color, opacity:this.opacity, transparent:true});
+      	{color: this.fill_color, opacity:this.opacity, transparent:true});
 
-    let fill_geom = new THREE.Geometry();
-    fill_geom.vertices.push(this.p1, this.p2, this.p3, this.p4);
-    fill_geom.faces.push(new THREE.Face3(0, 1, 2), new THREE.Face3(0, 2, 3));
+    let fill_geom = new THREE.BufferGeometry();
+    //fill_geom.vertices.push(this.p1, this.p2, this.p3, this.p4);
+    //fill_geom.faces.push(new THREE.Face3(0, 1, 2), new THREE.Face3(0, 2, 3));
+
+    const points = [
+                this.p1, this.p2, this.p3,
+                this.p1, this.p3, this.p4
+	];
+
+    fill_geom.setFromPoints(points);
+
     this.fill = new THREE.Mesh(fill_geom, fill_mat);
 
     this.rect = new THREE.Group(this.fill, this.outline);
