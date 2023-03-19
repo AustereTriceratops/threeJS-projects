@@ -1,4 +1,4 @@
-# AustereTriceratops.github.io
+# threeJS-Projects
 
 A collection of various Javascript-based projects. 
 
